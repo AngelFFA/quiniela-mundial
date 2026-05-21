@@ -8,18 +8,33 @@
 
         <div class="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
-                <p class="text-sm font-bold uppercase tracking-[0.3em] text-white/45">Panel privado</p>
-                <h1 class="mt-3 text-4xl font-black">Bienvenido a tu quiniela</h1>
+                <p class="text-sm font-bold uppercase tracking-[0.3em] text-white/45">
+                    Panel privado
+                </p>
+
+                <h1 class="mt-3 text-4xl font-black">
+                    Bienvenido a tu quiniela
+                </h1>
+
                 <p class="mt-3 max-w-2xl text-white/60">
-                    Desde aquí vas a llenar tus pronósticos, revisar resultados oficiales,
-                    comparar quinielas y seguir la tabla de posiciones.
+                    Desde aquí vas a llenar tus pronósticos,
+                    revisar resultados oficiales, comparar
+                    quinielas y seguir la tabla de posiciones.
                 </p>
             </div>
 
             <div class="grid grid-cols-3 overflow-hidden rounded-2xl border border-white/15">
-                <div class="bg-[#173B8F] px-4 py-3 text-center font-black">USA</div>
-                <div class="bg-[#00843D] px-4 py-3 text-center font-black">MEX</div>
-                <div class="bg-[#D71920] px-4 py-3 text-center font-black">CAN</div>
+                <div class="bg-[#173B8F] px-4 py-3 text-center font-black">
+                    USA
+                </div>
+
+                <div class="bg-[#00843D] px-4 py-3 text-center font-black">
+                    MEX
+                </div>
+
+                <div class="bg-[#D71920] px-4 py-3 text-center font-black">
+                    CAN
+                </div>
             </div>
         </div>
     </div>
@@ -43,17 +58,30 @@
 
     <div class="mt-8 grid gap-6 lg:grid-cols-2">
         <div class="rounded-[1.7rem] border border-white/10 bg-white/10 p-6 backdrop-blur">
-            <h2 class="text-2xl font-black">Mis pronósticos</h2>
-            <p class="mt-2 text-white/50">Aquí aparecerán los partidos disponibles para llenar.</p>
+            <h2 class="text-2xl font-black">
+                Simulador de clasificación
+            </h2>
 
-            <div class="mt-6 rounded-2xl border border-dashed border-white/20 p-6 text-center text-white/45">
-                Pendiente de cargar partidos desde la API.
-            </div>
+            <p class="mt-2 text-white/50">
+                Calcula automáticamente grupos, mejores terceros
+                y cruces eliminatorios según tus predicciones.
+            </p>
+
+            <a href="{{ route('bracket.simulator') }}"
+               class="mt-6 inline-flex rounded-2xl bg-white px-6 py-3 font-black text-[#050b18] shadow-xl transition hover:scale-105">
+                Abrir simulador
+            </a>
         </div>
 
         <div class="rounded-[1.7rem] border border-white/10 bg-white/10 p-6 backdrop-blur">
-            <h2 class="text-2xl font-black">Tabla de posiciones</h2>
-            <p class="mt-2 text-white/50">Ranking general transparente para todos los participantes.</p>
+            <h2 class="text-2xl font-black">
+                Tabla de posiciones
+            </h2>
+
+            <p class="mt-2 text-white/50">
+                Ranking transparente para todos
+                los participantes.
+            </p>
 
             <div class="mt-6 rounded-2xl border border-dashed border-white/20 p-6 text-center text-white/45">
                 Pendiente de calcular puntos.

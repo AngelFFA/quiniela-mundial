@@ -9,6 +9,8 @@ Route::get('/', [PageController::class, 'landing'])->name('landing');
 
 Route::get('/reglamento', [PageController::class, 'rules'])->name('rules');
 
+Route::get('/login', [GoogleController::class, 'redirect'])->name('login');
+
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
 
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
