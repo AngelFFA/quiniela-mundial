@@ -1,169 +1,115 @@
 @extends('layouts.app', ['title' => 'Quiniela Mundial 2026'])
 
 @section('content')
-<section class="relative mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 lg:grid-cols-2 lg:py-20">
-    <div class="absolute left-0 top-20 h-72 w-72 rounded-full bg-[#173B8F]/30 blur-3xl"></div>
-    <div class="absolute right-0 top-28 h-72 w-72 rounded-full bg-[#D71920]/25 blur-3xl"></div>
-    <div class="absolute bottom-0 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#00843D]/25 blur-3xl"></div>
+<section class="relative min-h-[calc(100vh-92px)] px-6 py-14">
+    <div class="absolute -left-40 top-0 h-[560px] w-[560px] rounded-full bg-[#1238ff]"></div>
+    <div class="absolute -left-24 top-[250px] h-[430px] w-[430px] rounded-full bg-[#51c855]"></div>
+    <div class="absolute -left-6 top-[430px] h-[360px] w-[360px] rounded-full bg-[#8edcff]"></div>
 
-    <div class="relative">
-        <div class="mb-8 max-w-xl overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 shadow-2xl backdrop-blur-xl">
-            <div class="grid grid-cols-3">
-                <div class="bg-[#173B8F] px-5 py-5 text-center">
-                    <p class="text-3xl font-black">USA</p>
-                    <p class="mt-1 text-xs font-bold uppercase tracking-widest text-white/70">Host</p>
-                </div>
+    <div class="absolute -right-20 top-10 h-[500px] w-[500px] rounded-full bg-[#e51b2b]"></div>
+    <div class="absolute right-[-110px] top-[360px] h-[450px] w-[450px] rounded-full bg-[#ff7a1a]"></div>
+    <div class="absolute right-16 bottom-4 h-[410px] w-[410px] rounded-full bg-[#ffc400]"></div>
 
-                <div class="bg-[#00843D] px-5 py-5 text-center">
-                    <p class="text-3xl font-black">MEX</p>
-                    <p class="mt-1 text-xs font-bold uppercase tracking-widest text-white/70">Host</p>
-                </div>
+    <div class="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-2">
+        <div>
+            <div class="inline-flex rounded-full bg-[#edf1ff] px-5 py-2 text-xs font-black uppercase tracking-[0.25em] text-[#1238ff]">
+                Mundial 2026 · Quiniela privada
+            </div>
 
-                <div class="bg-[#D71920] px-5 py-5 text-center">
-                    <p class="text-3xl font-black">CAN</p>
-                    <p class="mt-1 text-xs font-bold uppercase tracking-widest text-white/70">Host</p>
-                </div>
+            <h1 class="mt-8 text-6xl font-black leading-[0.95] text-[#080f2f] md:text-7xl">
+                Quiniela
+                <span class="block">Mundial 2026</span>
+            </h1>
+
+            <p class="mt-7 max-w-xl text-lg font-medium leading-8 text-[#080f2f]/65">
+                Llená tus marcadores, revisá las quinielas de otros participantes
+                y seguí la tabla de puntos durante todo el torneo.
+            </p>
+
+            <div class="mt-9 flex flex-col gap-4 sm:flex-row">
+                @auth
+                    <a href="{{ route('dashboard') }}" class="rounded-2xl bg-[#1238ff] px-8 py-4 text-center font-black text-white shadow-lg">
+                        Ir al panel →
+                    </a>
+                @else
+                    <a href="{{ route('auth.google') }}" class="rounded-2xl bg-[#1238ff] px-8 py-4 text-center font-black text-white shadow-lg">
+                        Entrar con Google →
+                    </a>
+                @endauth
+
+                <a href="{{ route('rules') }}" class="rounded-2xl border border-[#080f2f]/15 bg-white px-8 py-4 text-center font-black text-[#080f2f] shadow-sm">
+                    Ver reglamento
+                </a>
             </div>
         </div>
 
-        <p class="mb-4 text-sm font-black uppercase tracking-[0.35em] text-white/45">
-            Mundial 2026 · Quiniela privada
-        </p>
+        <div class="rounded-[2rem] bg-white p-6 shadow-2xl">
+            <div class="rounded-[1.5rem] bg-[#080f2f] p-6 text-white">
+                <p class="text-xs font-black uppercase tracking-[0.28em] text-white/45">Vista previa</p>
+                <h2 class="mt-2 text-3xl font-black">Camino al campeón</h2>
 
-        <h1 class="max-w-3xl text-5xl font-black leading-tight md:text-7xl">
-            Pronosticá.
-            <span class="block bg-gradient-to-r from-[#4d8dff] via-white to-[#ff4b55] bg-clip-text text-transparent">
-                Competí.
-            </span>
-            Ganá.
-        </h1>
+                <div class="mt-6 rounded-3xl bg-[#f1f5ff] p-5 text-[#080f2f]">
+                    <p class="font-black text-[#080f2f]/65">Grupo A</p>
 
-        <p class="mt-6 max-w-xl text-lg leading-8 text-white/70">
-            Una quiniela para registrar marcadores, comparar pronósticos con otros participantes
-            y calcular puntos automáticamente con los resultados reales del torneo.
-        </p>
+                    <div class="mt-4 grid grid-cols-3 items-center gap-4">
+                        <div class="rounded-2xl bg-[#1238ff] px-4 py-4 text-center font-black text-white">
+                            Equipo 1
+                        </div>
 
-        <div class="mt-10 flex flex-col gap-4 sm:flex-row">
-            @auth
-                <a href="{{ route('dashboard') }}" class="rounded-2xl bg-white px-8 py-4 text-center text-base font-black text-[#050b18] shadow-xl transition hover:scale-105">
-                    Ir al panel
-                </a>
-            @else
-                <a href="{{ route('auth.google') }}" class="rounded-2xl bg-white px-8 py-4 text-center text-base font-black text-[#050b18] shadow-xl transition hover:scale-105">
-                    Entrar con Google
-                </a>
-            @endauth
+                        <div class="text-center text-3xl font-black">
+                            2 - 1
+                        </div>
 
-            <a href="{{ route('rules') }}" class="rounded-2xl border border-white/20 bg-white/10 px-8 py-4 text-center text-base font-bold text-white backdrop-blur transition hover:bg-white/20">
-                Ver reglamento
-            </a>
-        </div>
+                        <div class="rounded-2xl bg-[#e51b2b] px-4 py-4 text-center font-black text-white">
+                            Equipo 2
+                        </div>
+                    </div>
+                </div>
 
-        <div class="mt-10 grid max-w-xl grid-cols-3 gap-4">
-            <div class="rounded-[1.7rem] border border-white/10 bg-white/10 p-5 text-center backdrop-blur">
-                <p class="text-4xl font-black">104</p>
-                <p class="mt-1 text-xs font-semibold text-white/50">partidos</p>
-            </div>
+                <div class="mt-6 grid grid-cols-3 gap-4">
+                    <div class="rounded-2xl bg-[#1238ff] p-5 text-center">
+                        <p class="text-4xl font-black">104</p>
+                        <p class="mt-1 text-xs font-black uppercase tracking-widest text-white/70">Partidos</p>
+                    </div>
 
-            <div class="rounded-[1.7rem] border border-white/10 bg-white/10 p-5 text-center backdrop-blur">
-                <p class="text-4xl font-black">48</p>
-                <p class="mt-1 text-xs font-semibold text-white/50">equipos</p>
-            </div>
+                    <div class="rounded-2xl bg-[#159447] p-5 text-center">
+                        <p class="text-4xl font-black">48</p>
+                        <p class="mt-1 text-xs font-black uppercase tracking-widest text-white/70">Equipos</p>
+                    </div>
 
-            <div class="rounded-[1.7rem] border border-white/10 bg-white/10 p-5 text-center backdrop-blur">
-                <p class="text-4xl font-black">1</p>
-                <p class="mt-1 text-xs font-semibold text-white/50">premio</p>
+                    <div class="rounded-2xl bg-[#ffc400] p-5 text-center text-[#080f2f]">
+                        <p class="text-4xl font-black">1</p>
+                        <p class="mt-1 text-xs font-black uppercase tracking-widest">Premio</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="relative">
-        <div class="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-[#173B8F]/40 via-white/10 to-[#D71920]/35 blur-2xl"></div>
+    <div class="relative mx-auto mt-14 grid max-w-7xl overflow-hidden rounded-[2rem] shadow-2xl md:grid-cols-4">
+        <a href="{{ route('dashboard') }}" class="bg-[#1238ff] p-8 text-white">
+            <h3 class="text-2xl font-black">Tus pronósticos</h3>
+            <p class="mt-2 text-sm font-medium text-white/75">Completá los resultados de todos los partidos.</p>
+            <p class="mt-7 text-3xl">→</p>
+        </a>
 
-        <div class="relative overflow-hidden rounded-[2.5rem] border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-xl">
-            <div class="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#D71920]/30 blur-3xl"></div>
-            <div class="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-[#00843D]/25 blur-3xl"></div>
+        <a href="{{ route('bracket.simulator') }}" class="bg-[#e51b2b] p-8 text-white">
+            <h3 class="text-2xl font-black">Simulador</h3>
+            <p class="mt-2 text-sm font-medium text-white/75">Explorá grupos y mejores terceros.</p>
+            <p class="mt-7 text-3xl">→</p>
+        </a>
 
-            <div class="relative rounded-[2rem] bg-[#07101f]/90 p-6">
-                <div class="mb-7 flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-xs font-black uppercase tracking-[0.3em] text-white/40">Vista previa</p>
-                        <h2 class="mt-2 text-3xl font-black">Centro de quiniela</h2>
-                    </div>
+        <a href="{{ route('dashboard') }}" class="bg-[#159447] p-8 text-white">
+            <h3 class="text-2xl font-black">Tabla de puntos</h3>
+            <p class="mt-2 text-sm font-medium text-white/75">Seguimiento del ranking general.</p>
+            <p class="mt-7 text-3xl">→</p>
+        </a>
 
-                    <div class="rounded-full bg-white px-4 py-2 text-sm font-black text-[#050b18]">
-                        En vivo
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <div class="rounded-[1.7rem] border border-white/10 bg-white/10 p-5">
-                        <div class="mb-4 flex items-center justify-between">
-                            <p class="text-sm font-bold text-white/50">Partido de grupo</p>
-                            <span class="rounded-full bg-[#173B8F]/70 px-3 py-1 text-xs font-black">Abierto</span>
-                        </div>
-
-                        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-                            <div>
-                                <div class="h-12 rounded-xl bg-gradient-to-r from-[#173B8F] to-[#4d8dff]"></div>
-                                <p class="mt-2 font-black">Equipo A</p>
-                            </div>
-
-                            <div class="rounded-2xl bg-white px-5 py-3 text-3xl font-black text-[#050b18]">
-                                2 - 1
-                            </div>
-
-                            <div class="text-right">
-                                <div class="h-12 rounded-xl bg-gradient-to-r from-[#ff4b55] to-[#D71920]"></div>
-                                <p class="mt-2 font-black">Equipo B</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/10 p-5">
-                            <p class="text-sm text-white/50">Resultado oficial</p>
-                            <p class="mt-2 text-2xl font-black text-yellow-300">Pendiente</p>
-                        </div>
-
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/10 p-5">
-                            <p class="text-sm text-white/50">Puntos máximos</p>
-                            <p class="mt-2 text-2xl font-black text-green-300">7 pts</p>
-                        </div>
-                    </div>
-
-                    <div class="rounded-[1.7rem] border border-white/10 bg-white/5 p-5">
-                        <div class="mb-4 flex items-center justify-between">
-                            <p class="text-sm font-bold text-white/60">Tabla preliminar</p>
-                            <p class="text-xs font-semibold text-white/35">visible para todos</p>
-                        </div>
-
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3">
-                                <span class="font-bold">Participante 1</span>
-                                <span class="font-black text-green-300">18 pts</span>
-                            </div>
-
-                            <div class="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3">
-                                <span class="font-bold">Participante 2</span>
-                                <span class="font-black text-blue-300">15 pts</span>
-                            </div>
-
-                            <div class="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3">
-                                <span class="font-bold">Participante 3</span>
-                                <span class="font-black text-red-300">12 pts</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-5 grid grid-cols-3 gap-3">
-            <div class="h-2 rounded-full bg-[#173B8F]"></div>
-            <div class="h-2 rounded-full bg-[#00843D]"></div>
-            <div class="h-2 rounded-full bg-[#D71920]"></div>
-        </div>
+        <a href="{{ route('rules') }}" class="bg-[#ffc400] p-8 text-[#080f2f]">
+            <h3 class="text-2xl font-black">Premio final</h3>
+            <p class="mt-2 text-sm font-medium text-[#080f2f]/70">Un solo ganador al final del torneo.</p>
+            <p class="mt-7 text-3xl">→</p>
+        </a>
     </div>
 </section>
 @endsection

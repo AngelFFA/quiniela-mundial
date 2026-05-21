@@ -1,109 +1,241 @@
 @extends('layouts.app', ['title' => 'Reglamento - Quiniela Mundial'])
 
 @section('content')
-<section class="mx-auto max-w-5xl px-6 py-12">
-    <h1 class="text-4xl font-black">Reglamento de la quiniela</h1>
-    <p class="mt-4 text-white/60">
-        La quiniela tendrá un solo premio al final del torneo. Los puntos se calculan automáticamente
-        según los resultados registrados para cada partido.
-    </p>
-
-    <div class="mt-10 space-y-8">
-        <div class="rounded-3xl border border-white/10 bg-white/10 p-6">
-            <h2 class="text-2xl font-black">Fase 1: Grupos</h2>
-            <p class="mt-3 text-white/70">
-                Antes del primer partido del torneo, cada participante deberá entregar el marcador exacto
-                de todos los partidos de la fase de grupos. No se aceptan cambios después del cierre.
-            </p>
-
-            <div class="mt-5 overflow-hidden rounded-2xl border border-white/10">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-white/10 text-white">
-                        <tr>
-                            <th class="px-4 py-3">Caso</th>
-                            <th class="px-4 py-3">Puntos</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/10 text-white/70">
-                        <tr>
-                            <td class="px-4 py-3">Marcador exacto</td>
-                            <td class="px-4 py-3 font-bold text-green-300">5</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3">Resultado correcto</td>
-                            <td class="px-4 py-3 font-bold text-yellow-300">3</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3">Fallo</td>
-                            <td class="px-4 py-3 font-bold text-red-300">0</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="rounded-3xl border border-white/10 bg-white/10 p-6">
-            <h2 class="text-2xl font-black">Fase 2: Eliminatoria</h2>
-            <p class="mt-3 text-white/70">
-                Antes de cada ronda, cada participante actualizará sus pronósticos: marcador al minuto 90
-                y equipo que avanza. Los pronósticos se cierran antes del primer partido de cada ronda.
-            </p>
-
-            <div class="mt-5 overflow-hidden rounded-2xl border border-white/10">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-white/10 text-white">
-                        <tr>
-                            <th class="px-4 py-3">Caso</th>
-                            <th class="px-4 py-3">Puntos</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/10 text-white/70">
-                        <tr>
-                            <td class="px-4 py-3">Acertaste la llave</td>
-                            <td class="px-4 py-3 font-bold text-blue-300">2</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3">Marcador exacto al 90' + quién avanza correcto</td>
-                            <td class="px-4 py-3 font-bold text-green-300">5</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3">Resultado correcto al 90' + quién avanza correcto</td>
-                            <td class="px-4 py-3 font-bold text-yellow-300">3</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3">Fallaste marcador pero acertaste quién avanza</td>
-                            <td class="px-4 py-3 font-bold text-yellow-300">2</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3">Marcador exacto al 90' pero fallaste quién avanza</td>
-                            <td class="px-4 py-3 font-bold text-orange-300">1</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3">Todo mal</td>
-                            <td class="px-4 py-3 font-bold text-red-300">0</td>
-                        </tr>
-                    </tbody>
-                </table>
+<section class="relative px-6 py-12">
+    <div class="relative mx-auto max-w-7xl">
+        <div class="rounded-[2rem] bg-white p-8 shadow-xl">
+            <div class="inline-flex rounded-full bg-[#edf1ff] px-5 py-2 text-xs font-black uppercase tracking-[0.25em] text-[#1238ff]">
+                Reglamento oficial
             </div>
 
-            <p class="mt-4 text-sm text-white/60">
-                Los 2 puntos por llave acertada se suman encima de los puntos por resultado.
-                El máximo por partido es de 7 puntos.
+            <h1 class="mt-6 text-5xl font-black leading-tight text-[#080f2f]">
+                Reglas de la quiniela
+            </h1>
+
+            <p class="mt-4 max-w-3xl text-lg font-medium leading-8 text-[#080f2f]/65">
+                Un solo premio al final del torneo. La quiniela se divide en fase de grupos
+                y fase eliminatoria, con reglas distintas para calcular los puntos.
             </p>
         </div>
 
-        <div class="rounded-3xl border border-white/10 bg-white/10 p-6">
-            <h2 class="text-2xl font-black">Reglas generales</h2>
+        <div class="mt-8 grid gap-6 lg:grid-cols-2">
+            <div class="rounded-[2rem] bg-white p-7 shadow-xl">
+                <div class="mb-6 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-[0.25em] text-[#1238ff]">
+                            Fase 1
+                        </p>
 
-            <ul class="mt-4 space-y-3 text-white/70">
-                <li>Un solo premio al participante con más puntos totales al final del torneo.</li>
-                <li>En caso de empate, gana quien tenga más marcadores exactos.</li>
-                <li>Si el empate continúa, el premio se divide.</li>
-                <li>Los pronósticos de grupos se cierran antes del primer partido del torneo.</li>
-                <li>Los pronósticos de cada ronda eliminatoria se cierran antes del primer partido de esa ronda.</li>
-                <li>No se aceptan cambios después del cierre de cada fase.</li>
-                <li>Partidos suspendidos o anulados no puntúan.</li>
-            </ul>
+                        <h2 class="mt-1 text-3xl font-black text-[#080f2f]">
+                            Fase de grupos
+                        </h2>
+                    </div>
+
+                    <span class="rounded-2xl bg-[#1238ff] px-5 py-3 text-sm font-black text-white">
+                        Antes del inicio
+                    </span>
+                </div>
+
+                <p class="text-sm font-medium leading-7 text-[#080f2f]/65">
+                    Antes del primer partido del torneo, cada participante entrega el marcador exacto
+                    de todos los partidos de la fase de grupos. No se aceptan cambios después del cierre.
+                </p>
+
+                <div class="mt-7 space-y-4">
+                    <div class="rounded-2xl bg-[#f4f6ff] p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-lg font-black text-[#080f2f]">Marcador exacto</p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    Dijiste 2-1 y quedó 2-1.
+                                </p>
+                            </div>
+
+                            <p class="text-4xl font-black text-[#159447]">5</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-[#f4f6ff] p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-lg font-black text-[#080f2f]">Resultado correcto</p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    Acertaste ganador, perdedor o empate.
+                                </p>
+                            </div>
+
+                            <p class="text-4xl font-black text-[#1238ff]">3</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-[#f4f6ff] p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-lg font-black text-[#080f2f]">Fallo</p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    No acertaste marcador ni resultado.
+                                </p>
+                            </div>
+
+                            <p class="text-4xl font-black text-[#e51b2b]">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-[2rem] bg-white p-7 shadow-xl">
+                <div class="mb-6 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-[0.25em] text-[#e51b2b]">
+                            Fase 2
+                        </p>
+
+                        <h2 class="mt-1 text-3xl font-black text-[#080f2f]">
+                            Eliminatoria
+                        </h2>
+                    </div>
+
+                    <span class="rounded-2xl bg-[#e51b2b] px-5 py-3 text-sm font-black text-white">
+                        Por ronda
+                    </span>
+                </div>
+
+                <p class="text-sm font-medium leading-7 text-[#080f2f]/65">
+                    Antes de cada ronda, cada participante actualiza sus pronósticos:
+                    marcador al 90' y equipo que avanza. Los pronósticos se cierran antes del
+                    primer partido de cada ronda.
+                </p>
+
+                <div class="mt-7 space-y-4">
+                    <div class="rounded-2xl bg-[#fff4f4] p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-lg font-black text-[#080f2f]">Acertar la llave</p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    Acertaste los dos equipos que se enfrentan.
+                                </p>
+                            </div>
+
+                            <p class="text-4xl font-black text-[#159447]">2</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-[#fff4f4] p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-lg font-black text-[#080f2f]">Marcador exacto y avanza correcto</p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    Predicción perfecta en eliminatoria.
+                                </p>
+                            </div>
+
+                            <p class="text-4xl font-black text-[#159447]">5</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-[#fff4f4] p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-lg font-black text-[#080f2f]">Resultado y avanza correcto</p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    Acertaste resultado al 90' y quién avanza.
+                                </p>
+                            </div>
+
+                            <p class="text-4xl font-black text-[#1238ff]">3</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-[#fff4f4] p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-lg font-black text-[#080f2f]">Solo avanza correcto</p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    Fallaste marcador, pero acertaste clasificado.
+                                </p>
+                            </div>
+
+                            <p class="text-4xl font-black text-[#ff9f1c]">2</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-[#fff4f4] p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-lg font-black text-[#080f2f]">Exacto, pero avanza mal</p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    Acertaste marcador al 90', pero fallaste quién avanza.
+                                </p>
+                            </div>
+
+                            <p class="text-4xl font-black text-[#ff9f1c]">1</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-[#fff4f4] p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-lg font-black text-[#080f2f]">Todo mal</p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    No acertaste marcador ni clasificado.
+                                </p>
+                            </div>
+
+                            <p class="text-4xl font-black text-[#e51b2b]">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 rounded-[2rem] bg-white p-7 shadow-xl">
+            <h2 class="text-3xl font-black text-[#080f2f]">
+                Reglas generales
+            </h2>
+
+            <div class="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <div class="rounded-2xl bg-[#f4f6ff] p-5">
+                    <p class="text-lg font-black text-[#080f2f]">Un solo premio</p>
+                    <p class="mt-2 text-sm font-medium leading-6 text-[#080f2f]/60">
+                        Gana quien tenga más puntos al final del torneo.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl bg-[#f4f6ff] p-5">
+                    <p class="text-lg font-black text-[#080f2f]">Empate</p>
+                    <p class="mt-2 text-sm font-medium leading-6 text-[#080f2f]/60">
+                        Si hay empate, gana quien tenga más marcadores exactos.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl bg-[#f4f6ff] p-5">
+                    <p class="text-lg font-black text-[#080f2f]">Empate final</p>
+                    <p class="mt-2 text-sm font-medium leading-6 text-[#080f2f]/60">
+                        Si sigue el empate, se divide el premio.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl bg-[#f4f6ff] p-5">
+                    <p class="text-lg font-black text-[#080f2f]">Cierre de grupos</p>
+                    <p class="mt-2 text-sm font-medium leading-6 text-[#080f2f]/60">
+                        Se cierra antes del primer partido del torneo.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl bg-[#f4f6ff] p-5">
+                    <p class="text-lg font-black text-[#080f2f]">Cierre por ronda</p>
+                    <p class="mt-2 text-sm font-medium leading-6 text-[#080f2f]/60">
+                        Cada ronda se cierra antes del primer partido de esa ronda.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl bg-[#f4f6ff] p-5">
+                    <p class="text-lg font-black text-[#080f2f]">Suspendidos</p>
+                    <p class="mt-2 text-sm font-medium leading-6 text-[#080f2f]/60">
+                        Partidos suspendidos o anulados no puntúan.
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </section>
