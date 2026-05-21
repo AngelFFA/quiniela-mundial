@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BracketController;
+use App\Http\Controllers\PredictionController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,7 +21,15 @@ Route::post('/logout', [GoogleController::class, 'logout'])->name('logout');
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
 
-    Route::get('/simulador', [BracketController::class, 'simulator'])->name('bracket.simulator');
+    Route::get('/pronosticos', [PredictionController::class, 'index'])
+        ->name('predictions.index');
 
-    Route::post('/simulador/generar', [BracketController::class, 'generate'])->name('bracket.generate');
+    Route::post('/pronosticos/guardar', [PredictionController::class, 'store'])
+        ->name('predictions.store');
+
+    Route::get('/simulador', [BracketController::class, 'simulator'])
+        ->name('bracket.simulator');
+
+    Route::post('/simulador/generar', [BracketController::class, 'generate'])
+        ->name('bracket.generate');
 });
