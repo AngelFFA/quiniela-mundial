@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MatchGame;
 use App\Models\Prediction;
+use App\Services\BracketSimulatorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,25 +26,38 @@ class PredictionController extends Controller
         return view('predictions.index', compact('matches', 'predictions'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, BracketSimulatorService $simulator)
     {
         if (!$request->predictions) {
             return back()->with('error', 'No hay pronósticos para guardar.');
         }
 
         foreach ($request->predictions as $matchId => $prediction) {
+            if (
+                $prediction['home'] === null ||
+                $prediction['home'] === '' ||
+                $prediction['away'] === null ||
+                $prediction['away'] === ''
+            ) {
+                continue;
+            }
+
             Prediction::updateOrCreate(
                 [
                     'user_id' => Auth::id(),
                     'match_game_id' => $matchId,
                 ],
                 [
-                    'predicted_home_score' => $prediction['home'] ?? 0,
-                    'predicted_away_score' => $prediction['away'] ?? 0,
+                    'predicted_home_score' => $prediction['home'],
+                    'predicted_away_score' => $prediction['away'],
                 ]
             );
         }
 
-        return back()->with('success', 'Pronósticos guardados correctamente.');
+        $simulator->generateForUser(Auth::id());
+
+        return redirect()
+            ->route('bracket.simulator', ['user_id' => Auth::id()])
+            ->with('success', 'Pronósticos guardados y simulación actualizada.');
     }
 }
