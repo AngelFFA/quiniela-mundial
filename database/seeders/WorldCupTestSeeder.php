@@ -27,37 +27,52 @@ class WorldCupTestSeeder extends Seeder
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        $teams = [
-            ['name' => 'México', 'group_name' => 'A'],
-            ['name' => 'Estados Unidos', 'group_name' => 'A'],
-            ['name' => 'Canadá', 'group_name' => 'A'],
-            ['name' => 'Japón', 'group_name' => 'A'],
-
-            ['name' => 'Argentina', 'group_name' => 'B'],
-            ['name' => 'Brasil', 'group_name' => 'B'],
-            ['name' => 'España', 'group_name' => 'B'],
-            ['name' => 'Francia', 'group_name' => 'B'],
+        $groups = [
+            'A' => ['Mexico', 'South Africa', 'Korea Republic', 'Czechia'],
+            'B' => ['Canada', 'Switzerland', 'Qatar', 'Bosnia and Herzegovina'],
+            'C' => ['Brazil', 'Morocco', 'Haiti', 'Scotland'],
+            'D' => ['United States', 'Paraguay', 'Australia', 'Türkiye'],
+            'E' => ['Germany', 'Curaçao', 'Côte d’Ivoire', 'Ecuador'],
+            'F' => ['Netherlands', 'Japan', 'Tunisia', 'Sweden'],
+            'G' => ['Belgium', 'Egypt', 'Iran', 'New Zealand'],
+            'H' => ['Spain', 'Cabo Verde', 'Saudi Arabia', 'Uruguay'],
+            'I' => ['France', 'Senegal', 'Norway', 'Iraq'],
+            'J' => ['Argentina', 'Algeria', 'Austria', 'Jordan'],
+            'K' => ['Portugal', 'Uzbekistan', 'Colombia', 'Congo DR'],
+            'L' => ['England', 'Croatia', 'Ghana', 'Panama'],
         ];
 
-        foreach ($teams as $team) {
-            Team::create($team);
+        foreach ($groups as $groupName => $teams) {
+            foreach ($teams as $teamName) {
+                Team::create([
+                    'name' => $teamName,
+                    'short_name' => strtoupper(substr($teamName, 0, 3)),
+                    'code' => strtoupper(substr($teamName, 0, 3)),
+                    'group_name' => $groupName,
+                ]);
+            }
         }
 
-        $groups = Team::all()->groupBy('group_name');
+        foreach ($groups as $groupName => $teamNames) {
+            $teams = Team::where('group_name', $groupName)->get()->values();
 
-        foreach ($groups as $teamsGroup) {
-            $teamsArray = $teamsGroup->values();
+            $pairings = [
+                [0, 1],
+                [2, 3],
+                [0, 2],
+                [3, 1],
+                [3, 0],
+                [1, 2],
+            ];
 
-            for ($i = 0; $i < $teamsArray->count(); $i++) {
-                for ($j = $i + 1; $j < $teamsArray->count(); $j++) {
-                    MatchGame::create([
-                        'home_team_id' => $teamsArray[$i]->id,
-                        'away_team_id' => $teamsArray[$j]->id,
-                        'match_date' => now(),
-                        'stage' => 'Grupos',
-                        'group_name' => $teamsArray[$i]->group_name,
-                    ]);
-                }
+            foreach ($pairings as $pairing) {
+                MatchGame::create([
+                    'home_team_id' => $teams[$pairing[0]]->id,
+                    'away_team_id' => $teams[$pairing[1]]->id,
+                    'match_date' => now()->addDays(rand(1, 20)),
+                    'stage' => 'Grupos',
+                    'group_name' => $groupName,
+                ]);
             }
         }
 

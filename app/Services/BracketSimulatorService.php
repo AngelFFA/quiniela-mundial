@@ -7,7 +7,6 @@ use App\Models\Prediction;
 use App\Models\Team;
 use App\Models\UserBracketMatch;
 use App\Models\UserGroupStanding;
-use Illuminate\Support\Collection;
 
 class BracketSimulatorService
 {
@@ -17,7 +16,7 @@ class BracketSimulatorService
         UserBracketMatch::where('user_id', $userId)->delete();
 
         $this->generateGroupStandings($userId);
-        $this->generateRoundOf32($userId);
+        $this->markBestThirdPlaces($userId);
     }
 
     private function generateGroupStandings(int $userId): void
@@ -78,10 +77,19 @@ class BracketSimulatorService
         $groups = collect($table)->groupBy('group_name');
 
         foreach ($groups as $groupName => $teams) {
-            $sorted = $teams->sortByDesc('points')
-                ->sortByDesc('goal_difference')
-                ->sortByDesc('goals_for')
-                ->values();
+            $sorted = $teams->sort(function ($a, $b) {
+                return [
+                    $b['points'],
+                    $b['goal_difference'],
+                    $b['goals_for'],
+                    $a['team_name'],
+                ] <=> [
+                    $a['points'],
+                    $a['goal_difference'],
+                    $a['goals_for'],
+                    $b['team_name'],
+                ];
+            })->values();
 
             foreach ($sorted as $index => $row) {
                 UserGroupStanding::create([
@@ -102,8 +110,6 @@ class BracketSimulatorService
                 ]);
             }
         }
-
-        $this->markBestThirdPlaces($userId);
     }
 
     private function ensureTeamInTable(array &$table, Team $team): void
@@ -114,6 +120,7 @@ class BracketSimulatorService
 
         $table[$team->id] = [
             'team_id' => $team->id,
+            'team_name' => $team->name,
             'group_name' => $team->group_name,
             'played' => 0,
             'won' => 0,
@@ -140,32 +147,6 @@ class BracketSimulatorService
             $standing->update([
                 'qualified' => true,
                 'qualification_type' => 'mejor tercero',
-            ]);
-        }
-    }
-
-    private function generateRoundOf32(int $userId): void
-    {
-        $qualified = UserGroupStanding::with('team')
-            ->where('user_id', $userId)
-            ->where('qualified', true)
-            ->orderBy('group_name')
-            ->orderBy('position')
-            ->get();
-
-        if ($qualified->count() < 32) {
-            return;
-        }
-
-        $teams = $qualified->pluck('team')->values();
-
-        for ($i = 0; $i < 16; $i++) {
-            UserBracketMatch::create([
-                'user_id' => $userId,
-                'round' => 'Dieciseisavos',
-                'slot' => $i + 1,
-                'home_team_id' => $teams[$i]->id,
-                'away_team_id' => $teams[31 - $i]->id,
             ]);
         }
     }

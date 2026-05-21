@@ -1,111 +1,196 @@
 @extends('layouts.app', ['title' => 'Simulador - Quiniela Mundial'])
 
 @section('content')
-<section class="mx-auto max-w-7xl px-6 py-12">
-    <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div>
-            <p class="text-sm font-bold uppercase tracking-[0.3em] text-white/45">Simulador</p>
-            <h1 class="mt-3 text-4xl font-black">Grupos y llaves predichas</h1>
-            <p class="mt-3 max-w-2xl text-white/60">
-                Aquí se calculan las tablas de grupos, mejores terceros y dieciseisavos según tus pronósticos.
-            </p>
-        </div>
+<section class="mx-auto max-w-7xl px-6 py-10">
+    <div class="rounded-3xl border border-white/10 bg-[#081225] p-6 shadow-2xl">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <p class="text-xs font-medium uppercase tracking-[0.25em] text-white/40">
+                    Simulador de quiniela
+                </p>
 
-        <form method="POST" action="{{ route('bracket.generate') }}">
-            @csrf
-            <button type="submit" class="rounded-2xl bg-white px-6 py-3 font-black text-[#050b18] shadow-xl transition hover:scale-105">
-                Generar simulación
-            </button>
-        </form>
+                <h1 class="mt-2 text-3xl font-semibold text-white">
+                    Grupos y clasificación
+                </h1>
+
+                <p class="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+                    Seleccioná un participante para revisar cómo queda su fase de grupos y qué terceros clasifican.
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row">
+                <form method="GET" action="{{ route('bracket.simulator') }}">
+                    <select name="user_id"
+                            onchange="this.form.submit()"
+                            class="h-11 rounded-xl border border-white/15 bg-[#101a2d] px-4 text-sm font-medium text-white outline-none">
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}" @selected($selectedUser->id === $user->id)>
+                                {{ $user->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+
+                @if($selectedUser->id === Auth::id())
+                    <form method="POST" action="{{ route('bracket.generate') }}">
+                        @csrf
+                        <button type="submit"
+                                class="h-11 rounded-xl bg-[#f6d36b] px-5 text-sm font-semibold text-[#07101f] shadow-lg transition hover:bg-[#ffe28a]">
+                            Generar simulación
+                        </button>
+                    </form>
+                @endif
+            </div>
+        </div>
     </div>
 
     @if(session('success'))
-        <div class="mt-6 rounded-2xl border border-green-400/20 bg-green-400/10 px-5 py-4 text-green-200">
+        <div class="mt-5 rounded-xl border border-green-400/20 bg-green-400/10 px-5 py-3 text-sm text-green-200">
             {{ session('success') }}
         </div>
     @endif
 
+    <div class="mt-8 grid gap-4 md:grid-cols-3">
+        <div class="rounded-2xl border border-white/10 bg-[#10224a] p-5">
+            <p class="text-xs uppercase tracking-widest text-white/40">Participante</p>
+            <p class="mt-1 text-lg font-semibold">{{ $selectedUser->name }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-[#0e3b2a] p-5">
+            <p class="text-xs uppercase tracking-widest text-white/40">Grupos calculados</p>
+            <p class="mt-1 text-lg font-semibold">{{ $standings->count() }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-[#4a1119] p-5">
+            <p class="text-xs uppercase tracking-widest text-white/40">Terceros clasificados</p>
+            <p class="mt-1 text-lg font-semibold">{{ $bestThirds->where('qualified', true)->count() }} / 8</p>
+        </div>
+    </div>
+
     <div class="mt-10">
-        <h2 class="text-2xl font-black">Tablas simuladas</h2>
+        <div class="mb-4">
+            <p class="text-xs font-medium uppercase tracking-[0.25em] text-white/35">
+                Fase de grupos
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold text-white">
+                Tablas simuladas
+            </h2>
+        </div>
 
         @if($standings->isEmpty())
-            <div class="mt-5 rounded-3xl border border-dashed border-white/20 bg-white/5 p-8 text-center text-white/50">
-                Todavía no hay tablas simuladas. Primero deben existir partidos de grupos y pronósticos guardados.
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/50">
+                Este participante todavía no tiene simulación generada.
             </div>
         @else
-            <div class="mt-5 grid gap-6 lg:grid-cols-2">
+            <div class="grid gap-5 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2">
                 @foreach($standings as $groupName => $teams)
-                    <div class="overflow-hidden rounded-3xl border border-white/10 bg-white/10 backdrop-blur">
-                        <div class="bg-white/10 px-5 py-4">
-                            <h3 class="text-xl font-black">Grupo {{ $groupName }}</h3>
+                    <div class="overflow-hidden rounded-2xl border border-white/10 bg-[#101827] shadow-xl">
+                        <div class="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#173B8F] to-[#D71920] px-4 py-3">
+                            <h3 class="text-base font-semibold">Grupo {{ $groupName }}</h3>
+                            <span class="rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium">
+                                2026
+                            </span>
                         </div>
 
-                        <table class="w-full text-sm">
-                            <thead class="text-white/50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left">Pos</th>
-                                    <th class="px-4 py-3 text-left">Equipo</th>
-                                    <th class="px-4 py-3 text-center">Pts</th>
-                                    <th class="px-4 py-3 text-center">DG</th>
-                                    <th class="px-4 py-3 text-center">GF</th>
-                                    <th class="px-4 py-3 text-center">Clasifica</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-white/10">
+                        <div class="p-3">
+                            <div class="space-y-2">
                                 @foreach($teams as $row)
-                                    <tr>
-                                        <td class="px-4 py-3">{{ $row->position }}</td>
-                                        <td class="px-4 py-3 font-bold">{{ $row->team->name }}</td>
-                                        <td class="px-4 py-3 text-center font-black">{{ $row->points }}</td>
-                                        <td class="px-4 py-3 text-center">{{ $row->goal_difference }}</td>
-                                        <td class="px-4 py-3 text-center">{{ $row->goals_for }}</td>
-                                        <td class="px-4 py-3 text-center">
-                                            @if($row->qualified)
-                                                <span class="rounded-full bg-green-400/15 px-3 py-1 text-xs font-bold text-green-300">
-                                                    {{ $row->qualification_type }}
+                                    <div class="rounded-xl border border-white/10 bg-white/[0.06] p-3">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <div class="flex min-w-0 items-center gap-3">
+                                                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f6d36b] text-sm font-semibold text-[#07101f]">
+                                                    {{ $row->position }}
                                                 </span>
-                                            @else
-                                                <span class="text-white/30">No</span>
-                                            @endif
-                                        </td>
-                                    </tr>
+
+                                                <div class="min-w-0">
+                                                    <p class="truncate text-sm font-medium text-white">
+                                                        {{ $row->team->name }}
+                                                    </p>
+
+                                                    <p class="mt-0.5 text-[11px] text-white/45">
+                                                        DG {{ $row->goal_difference }} · GF {{ $row->goals_for }}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div class="text-right">
+                                                <p class="text-lg font-semibold text-white">{{ $row->points }}</p>
+                                                <p class="text-[10px] uppercase tracking-wider text-white/35">pts</p>
+                                            </div>
+                                        </div>
+
+                                        @if($row->qualified)
+                                            <div class="mt-2 rounded-lg bg-green-400/10 px-3 py-1 text-[11px] font-medium text-green-300">
+                                                {{ ucfirst($row->qualification_type) }}
+                                            </div>
+                                        @else
+                                            <div class="mt-2 rounded-lg bg-white/5 px-3 py-1 text-[11px] font-medium text-white/35">
+                                                Eliminado
+                                            </div>
+                                        @endif
+                                    </div>
                                 @endforeach
-                            </tbody>
-                        </table>
+                            </div>
+                        </div>
                     </div>
                 @endforeach
             </div>
         @endif
     </div>
 
-    <div class="mt-12">
-        <h2 class="text-2xl font-black">Dieciseisavos generados</h2>
+    <div class="mt-10">
+        <div class="mb-4">
+            <p class="text-xs font-medium uppercase tracking-[0.25em] text-white/35">
+                Comparación
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold text-white">
+                Mejores terceros
+            </h2>
+        </div>
 
-        @if($bracketMatches->isEmpty())
-            <div class="mt-5 rounded-3xl border border-dashed border-white/20 bg-white/5 p-8 text-center text-white/50">
-                Todavía no hay llaves generadas.
+        @if($bestThirds->isEmpty())
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/50">
+                Todavía no hay terceros calculados.
             </div>
         @else
-            <div class="mt-5 grid gap-5 lg:grid-cols-2">
-                @foreach($bracketMatches as $match)
-                    <div class="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-                        <p class="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-white/40">
-                            {{ $match->round }} · Partido {{ $match->slot }}
-                        </p>
+            <div class="overflow-hidden rounded-2xl border border-white/10 bg-[#101827] shadow-xl">
+                <table class="w-full text-sm">
+                    <thead class="border-b border-white/10 bg-white/[0.06] text-xs uppercase tracking-wider text-white/45">
+                        <tr>
+                            <th class="px-4 py-3 text-left">#</th>
+                            <th class="px-4 py-3 text-left">Grupo</th>
+                            <th class="px-4 py-3 text-left">Equipo</th>
+                            <th class="px-4 py-3 text-center">Pts</th>
+                            <th class="px-4 py-3 text-center">DG</th>
+                            <th class="px-4 py-3 text-center">GF</th>
+                            <th class="px-4 py-3 text-center">Estado</th>
+                        </tr>
+                    </thead>
 
-                        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-                            <div class="rounded-2xl bg-white/10 p-4 font-black">
-                                {{ $match->homeTeam?->name ?? 'Pendiente' }}
-                            </div>
-
-                            <div class="text-white/40">vs</div>
-
-                            <div class="rounded-2xl bg-white/10 p-4 text-right font-black">
-                                {{ $match->awayTeam?->name ?? 'Pendiente' }}
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
+                    <tbody class="divide-y divide-white/10">
+                        @foreach($bestThirds as $index => $row)
+                            <tr class="text-white/80">
+                                <td class="px-4 py-3 font-medium">{{ $index + 1 }}</td>
+                                <td class="px-4 py-3">Grupo {{ $row->group_name }}</td>
+                                <td class="px-4 py-3 font-medium text-white">{{ $row->team->name }}</td>
+                                <td class="px-4 py-3 text-center font-semibold text-white">{{ $row->points }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->goal_difference }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->goals_for }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    @if($row->qualified)
+                                        <span class="rounded-full bg-green-400/10 px-3 py-1 text-xs font-medium text-green-300">
+                                            Clasifica
+                                        </span>
+                                    @else
+                                        <span class="rounded-full bg-white/5 px-3 py-1 text-xs font-medium text-white/35">
+                                            Fuera
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         @endif
     </div>
