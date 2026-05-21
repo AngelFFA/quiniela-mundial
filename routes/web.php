@@ -19,15 +19,25 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name
 Route::post('/logout', [GoogleController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
 
-    Route::get('/pronosticos', [PredictionController::class, 'index'])->name('predictions.index');
+    Route::get('/dashboard', [PageController::class, 'dashboard'])
+        ->name('dashboard');
 
-    Route::post('/pronosticos/guardar', [PredictionController::class, 'store'])->name('predictions.store');
+    Route::get('/ranking', [PageController::class, 'ranking'])
+        ->name('ranking');
 
-    Route::get('/quinielas', [PredictionController::class, 'publicList'])->name('predictions.public');
+    Route::get('/pronosticos', [PredictionController::class, 'index'])
+        ->name('predictions.index');
 
-    Route::get('/simulador', [BracketController::class, 'simulator'])->name('bracket.simulator');
+    Route::post('/pronosticos/guardar', [PredictionController::class, 'store'])
+        ->name('predictions.store');
 
-    Route::post('/simulador/generar', [BracketController::class, 'generate'])->name('bracket.generate');
+    Route::get('/quinielas', [PredictionController::class, 'publicList'])
+        ->name('predictions.public');
+
+    Route::get('/simulador', [BracketController::class, 'simulator'])
+        ->name('bracket.simulator');
+
+    Route::post('/simulador/generar', [BracketController::class, 'generate'])
+        ->name('bracket.generate');
 });
