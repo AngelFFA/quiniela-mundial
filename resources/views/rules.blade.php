@@ -60,7 +60,7 @@
                     <tbody class="divide-y divide-white/10 text-white/70">
                         <tr>
                             <td class="px-4 py-3">Acertaste la llave</td>
-                            <td class="px-4 py-3 font-bold text-blue-300">+2</td>
+                            <td class="px-4 py-3 font-bold text-blue-300">2</td>
                         </tr>
                         <tr>
                             <td class="px-4 py-3">Marcador exacto al 90' + quién avanza correcto</td>
