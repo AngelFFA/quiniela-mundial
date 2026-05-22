@@ -26,23 +26,22 @@
                     </div>
                 </a>
 
-                <nav class="hidden items-center gap-8 md:flex">
-                    <a href="{{ route('landing') }}" class="text-sm font-bold text-[#1238ff]">Inicio</a>
+                <nav class="hidden items-center gap-5 md:flex">
+                    <a href="{{ route('landing') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Inicio</a>
                     <a href="{{ route('rules') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Reglamento</a>
 
                     @auth
                         <a href="{{ route('dashboard') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Panel</a>
+                        <a href="{{ route('predictions.index') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Pronósticos</a>
+                        <a href="{{ route('predictions.public') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Quinielas</a>
                         <a href="{{ route('bracket.simulator') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Simulador</a>
+                        <a href="{{ route('ranking') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Ranking</a>
+                        <a href="{{ route('results.index') }}" class="text-sm font-bold text-[#e51b2b] hover:text-[#1238ff]">Resultados</a>
                     @endauth
                 </nav>
 
                 @auth
                     <div class="flex items-center gap-3">
-                        <div class="hidden text-right sm:block">
-                            <p class="text-sm font-black text-[#080f2f]">{{ Auth::user()->name }}</p>
-                            <p class="text-xs font-medium text-[#080f2f]/45">Participante</p>
-                        </div>
-
                         @if(Auth::user()->avatar)
                             <img src="{{ Auth::user()->avatar }}" class="h-11 w-11 rounded-full object-cover shadow-md" alt="Avatar">
                         @else

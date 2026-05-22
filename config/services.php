@@ -24,9 +24,14 @@ return [
     ],
 
     'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'redirect'      => env('GOOGLE_REDIRECT_URI'),
+    ],
+
+    'api_sports' => [
+        'key' => env('API_SPORTS_KEY'),
+        'url' => env('API_SPORTS_URL'),
     ],
 
 ];
