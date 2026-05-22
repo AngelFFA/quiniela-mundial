@@ -17,17 +17,20 @@ class BracketSimulatorService
 
         $this->generateGroupStandings($userId);
         $this->markBestThirdPlaces($userId);
+        $this->generateRoundOf32($userId);
     }
 
     private function generateGroupStandings(int $userId): void
     {
-        $groupMatches = MatchGame::with(['homeTeam', 'awayTeam'])
+        $matches = MatchGame::with(['homeTeam', 'awayTeam'])
             ->where('stage', 'Grupos')
+            ->orderBy('group_name')
+            ->orderBy('match_date')
             ->get();
 
         $table = [];
 
-        foreach ($groupMatches as $match) {
+        foreach ($matches as $match) {
             $prediction = Prediction::where('user_id', $userId)
                 ->where('match_game_id', $match->id)
                 ->first();
@@ -39,34 +42,34 @@ class BracketSimulatorService
             $homeTeam = $match->homeTeam;
             $awayTeam = $match->awayTeam;
 
-            $this->ensureTeamInTable($table, $homeTeam);
-            $this->ensureTeamInTable($table, $awayTeam);
+            $this->addTeamToTable($table, $homeTeam, $match->group_name);
+            $this->addTeamToTable($table, $awayTeam, $match->group_name);
 
-            $homeGoals = $prediction->predicted_home_score;
-            $awayGoals = $prediction->predicted_away_score;
+            $homeScore = (int) $prediction->predicted_home_score;
+            $awayScore = (int) $prediction->predicted_away_score;
 
             $table[$homeTeam->id]['played']++;
             $table[$awayTeam->id]['played']++;
 
-            $table[$homeTeam->id]['goals_for'] += $homeGoals;
-            $table[$homeTeam->id]['goals_against'] += $awayGoals;
+            $table[$homeTeam->id]['goals_for'] += $homeScore;
+            $table[$homeTeam->id]['goals_against'] += $awayScore;
 
-            $table[$awayTeam->id]['goals_for'] += $awayGoals;
-            $table[$awayTeam->id]['goals_against'] += $homeGoals;
+            $table[$awayTeam->id]['goals_for'] += $awayScore;
+            $table[$awayTeam->id]['goals_against'] += $homeScore;
 
-            if ($homeGoals > $awayGoals) {
+            if ($homeScore > $awayScore) {
                 $table[$homeTeam->id]['won']++;
                 $table[$awayTeam->id]['lost']++;
                 $table[$homeTeam->id]['points'] += 3;
-            } elseif ($homeGoals < $awayGoals) {
+            } elseif ($awayScore > $homeScore) {
                 $table[$awayTeam->id]['won']++;
                 $table[$homeTeam->id]['lost']++;
                 $table[$awayTeam->id]['points'] += 3;
             } else {
                 $table[$homeTeam->id]['drawn']++;
                 $table[$awayTeam->id]['drawn']++;
-                $table[$homeTeam->id]['points'] += 1;
-                $table[$awayTeam->id]['points'] += 1;
+                $table[$homeTeam->id]['points']++;
+                $table[$awayTeam->id]['points']++;
             }
         }
 
@@ -78,17 +81,19 @@ class BracketSimulatorService
 
         foreach ($groups as $groupName => $teams) {
             $sorted = $teams->sort(function ($a, $b) {
-                return [
-                    $b['points'],
-                    $b['goal_difference'],
-                    $b['goals_for'],
-                    $a['team_name'],
-                ] <=> [
-                    $a['points'],
-                    $a['goal_difference'],
-                    $a['goals_for'],
-                    $b['team_name'],
-                ];
+                if ($a['points'] !== $b['points']) {
+                    return $b['points'] <=> $a['points'];
+                }
+
+                if ($a['goal_difference'] !== $b['goal_difference']) {
+                    return $b['goal_difference'] <=> $a['goal_difference'];
+                }
+
+                if ($a['goals_for'] !== $b['goals_for']) {
+                    return $b['goals_for'] <=> $a['goals_for'];
+                }
+
+                return strcmp($a['team_name'], $b['team_name']);
             })->values();
 
             foreach ($sorted as $index => $row) {
@@ -112,7 +117,7 @@ class BracketSimulatorService
         }
     }
 
-    private function ensureTeamInTable(array &$table, Team $team): void
+    private function addTeamToTable(array &$table, Team $team, ?string $groupName): void
     {
         if (isset($table[$team->id])) {
             return;
@@ -121,7 +126,7 @@ class BracketSimulatorService
         $table[$team->id] = [
             'team_id' => $team->id,
             'team_name' => $team->name,
-            'group_name' => $team->group_name,
+            'group_name' => $groupName,
             'played' => 0,
             'won' => 0,
             'drawn' => 0,
@@ -140,14 +145,83 @@ class BracketSimulatorService
             ->orderByDesc('points')
             ->orderByDesc('goal_difference')
             ->orderByDesc('goals_for')
-            ->limit(8)
             ->get();
 
-        foreach ($thirdPlaces as $standing) {
-            $standing->update([
-                'qualified' => true,
-                'qualification_type' => 'mejor tercero',
+        foreach ($thirdPlaces as $index => $third) {
+            $third->update([
+                'qualified' => $index < 8,
+                'qualification_type' => $index < 8 ? 'mejor tercero' : null,
             ]);
         }
+    }
+
+    private function generateRoundOf32(int $userId): void
+    {
+        $thirdGroups = UserGroupStanding::where('user_id', $userId)
+            ->where('position', 3)
+            ->where('qualified', true)
+            ->pluck('group_name')
+            ->sort()
+            ->values()
+            ->implode('');
+
+        $thirdMap = $this->getThirdPlaceMap($thirdGroups);
+
+        $roundOf32 = [
+            73 => ['2A', '2B'],
+            74 => ['1E', '3' . $thirdMap['1E']],
+            75 => ['1I', '3' . $thirdMap['1I']],
+            76 => ['1F', '2C'],
+            77 => ['2K', '2L'],
+            78 => ['1H', '2J'],
+            79 => ['1D', '3' . $thirdMap['1D']],
+            80 => ['1G', '3' . $thirdMap['1G']],
+            81 => ['1C', '2F'],
+            82 => ['2E', '2I'],
+            83 => ['1A', '3' . $thirdMap['1A']],
+            84 => ['1L', '3' . $thirdMap['1L']],
+            85 => ['1J', '2H'],
+            86 => ['2D', '2G'],
+            87 => ['1B', '3' . $thirdMap['1B']],
+            88 => ['1K', '3' . $thirdMap['1K']],
+        ];
+
+        foreach ($roundOf32 as $slot => $teams) {
+            $home = $this->resolveSlot($userId, $teams[0]);
+            $away = $this->resolveSlot($userId, $teams[1]);
+
+            UserBracketMatch::create([
+                'user_id' => $userId,
+                'round' => 'Dieciseisavos',
+                'slot' => $slot,
+                'home_team_id' => $home?->team_id,
+                'away_team_id' => $away?->team_id,
+                'predicted_home_score' => null,
+                'predicted_away_score' => null,
+                'predicted_winner_team_id' => null,
+            ]);
+        }
+    }
+
+    private function getThirdPlaceMap(string $thirdGroups): array
+    {
+        $table = config('worldcup_third_place');
+
+        if (!isset($table[$thirdGroups])) {
+            throw new \Exception('No existe combinación FIFA para terceros: ' . $thirdGroups);
+        }
+
+        return $table[$thirdGroups];
+    }
+
+    private function resolveSlot(int $userId, string $slot): ?UserGroupStanding
+    {
+        $position = (int) substr($slot, 0, 1);
+        $groupName = substr($slot, 1, 1);
+
+        return UserGroupStanding::where('user_id', $userId)
+            ->where('group_name', $groupName)
+            ->where('position', $position)
+            ->first();
     }
 }

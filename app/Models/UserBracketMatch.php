@@ -17,11 +17,6 @@ class UserBracketMatch extends Model
         'predicted_winner_team_id',
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function homeTeam()
     {
         return $this->belongsTo(Team::class, 'home_team_id');
@@ -32,7 +27,7 @@ class UserBracketMatch extends Model
         return $this->belongsTo(Team::class, 'away_team_id');
     }
 
-    public function predictedWinner()
+    public function predictedWinnerTeam()
     {
         return $this->belongsTo(Team::class, 'predicted_winner_team_id');
     }

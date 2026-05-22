@@ -2,43 +2,49 @@
 
 @section('content')
 <section class="relative px-6 py-12">
-    <div class="absolute -right-20 top-10 h-[430px] w-[430px] rounded-full bg-[#e51b2b]/60"></div>
-    <div class="absolute right-10 top-72 h-[390px] w-[390px] rounded-full bg-[#ffc400]/70"></div>
-    <div class="absolute right-48 top-[430px] h-[320px] w-[320px] rounded-full bg-[#159447]/45"></div>
-
     <div class="relative mx-auto max-w-7xl">
-        <div class="grid gap-8 lg:grid-cols-[1fr_0.8fr]">
+        <div class="grid gap-8 lg:grid-cols-[1fr_380px]">
             <div>
-                <h1 class="text-5xl font-black text-[#080f2f]">Simulador</h1>
-                <h2 class="mt-3 text-2xl font-black text-[#080f2f]">Grupos y mejores terceros</h2>
+                <div class="inline-flex rounded-full bg-[#edf1ff] px-5 py-2 text-xs font-black uppercase tracking-[0.25em] text-[#1238ff]">
+                    Simulador
+                </div>
 
-                <p class="mt-4 max-w-xl text-base font-medium leading-7 text-[#080f2f]/65">
-                    Seleccioná un participante para ver su simulación.
+                <h1 class="mt-6 text-6xl font-black leading-tight text-[#080f2f]">
+                    Grupos y cruces
+                </h1>
+
+                <p class="mt-4 max-w-3xl text-lg font-medium leading-8 text-[#080f2f]/65">
+                    Revisá la simulación de grupos, mejores terceros y dieciseisavos.
                 </p>
             </div>
 
-            <div class="rounded-[2rem] bg-white p-6 shadow-xl">
-                <div class="grid gap-4 md:grid-cols-2">
-                    <form method="GET" action="{{ route('bracket.simulator') }}">
-                        <label class="text-sm font-black text-[#080f2f]/60">Participante</label>
-                        <select name="user_id" onchange="this.form.submit()" class="mt-2 h-12 w-full rounded-2xl border border-[#080f2f]/10 bg-white px-4 text-sm font-bold text-[#080f2f] outline-none">
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" @selected($selectedUser->id === $user->id)>
-                                    {{ $user->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </form>
+            <div class="rounded-[2rem] bg-[#080f2f] p-7 text-white shadow-2xl">
+                <p class="text-sm font-bold uppercase tracking-[0.25em] text-white/45">
+                    Participante
+                </p>
 
-                    @if($selectedUser->id === Auth::id())
-                        <form method="POST" action="{{ route('bracket.generate') }}" class="flex items-end">
-                            @csrf
-                            <button class="h-12 w-full rounded-2xl bg-[#1238ff] px-5 text-sm font-black text-white">
-                                Generar nueva simulación
-                            </button>
-                        </form>
-                    @endif
-                </div>
+                <form method="GET" action="{{ route('bracket.simulator') }}" class="mt-4">
+                    <select
+                        name="user_id"
+                        onchange="this.form.submit()"
+                        class="h-14 w-full rounded-2xl border-0 bg-white px-4 text-sm font-black text-[#080f2f] outline-none"
+                    >
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}" @selected($selectedUser->id === $user->id)>
+                                {{ $user->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+
+                @if($selectedUser->id === Auth::id())
+                    <form method="POST" action="{{ route('bracket.generate') }}" class="mt-4">
+                        @csrf
+                        <button class="h-14 w-full rounded-2xl bg-[#1238ff] px-5 text-sm font-black text-white">
+                            Generar simulación
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
 
@@ -48,20 +54,22 @@
             </div>
         @endif
 
-        <div class="mt-10 grid gap-6 lg:grid-cols-[1fr_300px]">
+        <div class="mt-10 grid gap-6 lg:grid-cols-[1fr_360px]">
             <div>
-                <h3 class="mb-5 text-2xl font-black text-[#080f2f]">Tablas de grupos</h3>
+                <h2 class="mb-5 text-3xl font-black text-[#080f2f]">
+                    Tablas de grupos
+                </h2>
 
                 @if($standings->isEmpty())
-                    <div class="rounded-3xl bg-white p-8 text-center font-bold text-[#080f2f]/50 shadow-xl">
-                        Este participante todavía no tiene simulación generada.
+                    <div class="rounded-[2rem] bg-white p-8 text-center font-black text-[#080f2f]/45 shadow-xl">
+                        Todavía no hay simulación generada.
                     </div>
                 @else
                     <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                         @foreach($standings as $groupName => $teams)
                             <div class="overflow-hidden rounded-3xl bg-white shadow-xl">
-                                <div class="px-5 py-4 {{ $loop->iteration % 4 == 1 ? 'bg-[#1238ff]' : ($loop->iteration % 4 == 2 ? 'bg-[#e51b2b]' : ($loop->iteration % 4 == 3 ? 'bg-[#159447]' : 'bg-[#7c3aed]')) }} text-white">
-                                    <h4 class="text-xl font-black">Grupo {{ $groupName }}</h4>
+                                <div class="bg-[#1238ff] px-5 py-4 text-white">
+                                    <h3 class="text-xl font-black">Grupo {{ $groupName }}</h3>
                                 </div>
 
                                 <table class="w-full text-sm">
@@ -71,23 +79,33 @@
                                             <th class="px-4 py-3 text-left">Equipo</th>
                                             <th class="px-4 py-3 text-center">PTS</th>
                                             <th class="px-4 py-3 text-center">DG</th>
-                                            <th class="px-4 py-3 text-center">GF</th>
                                         </tr>
                                     </thead>
 
                                     <tbody class="divide-y divide-slate-100">
                                         @foreach($teams as $row)
                                             <tr>
-                                                <td class="px-4 py-3 font-black">{{ $row->position }}</td>
+                                                <td class="px-4 py-3 font-black">
+                                                    {{ $row->position }}
+                                                </td>
+
                                                 <td class="px-4 py-3">
-                                                    <p class="font-black">{{ $row->team->name }}</p>
+                                                    <p class="font-black">
+                                                        {{ $row->team->name }}
+                                                    </p>
+
                                                     <p class="text-xs font-bold {{ $row->qualified ? 'text-[#159447]' : 'text-[#080f2f]/35' }}">
                                                         {{ $row->qualified ? ucfirst($row->qualification_type) : 'Eliminado' }}
                                                     </p>
                                                 </td>
-                                                <td class="px-4 py-3 text-center font-black">{{ $row->points }}</td>
-                                                <td class="px-4 py-3 text-center font-bold">{{ $row->goal_difference }}</td>
-                                                <td class="px-4 py-3 text-center font-bold">{{ $row->goals_for }}</td>
+
+                                                <td class="px-4 py-3 text-center font-black">
+                                                    {{ $row->points }}
+                                                </td>
+
+                                                <td class="px-4 py-3 text-center font-bold">
+                                                    {{ $row->goal_difference }}
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -99,36 +117,92 @@
             </div>
 
             <div>
-                <h3 class="mb-5 text-2xl font-black text-[#080f2f]">Mejores terceros</h3>
+                <h2 class="mb-5 text-3xl font-black text-[#080f2f]">
+                    Mejores terceros
+                </h2>
 
                 <div class="rounded-3xl bg-white p-5 shadow-xl">
-                    @if($bestThirds->isEmpty())
-                        <p class="text-sm font-bold text-[#080f2f]/50">Todavía no hay terceros calculados.</p>
-                    @else
-                        <div class="space-y-3">
-                            @foreach($bestThirds as $index => $row)
-                                <div class="rounded-2xl bg-[#f4f6ff] p-4">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <p class="font-black">{{ $index + 1 }}. {{ $row->team->name }}</p>
-                                            <p class="text-xs font-bold text-[#080f2f]/45">Grupo {{ $row->group_name }}</p>
-                                        </div>
+                    @forelse($bestThirds as $index => $row)
+                        <div class="mb-3 rounded-2xl bg-[#f4f6ff] p-4 last:mb-0">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-black">
+                                        {{ $index + 1 }}. {{ $row->team->name }}
+                                    </p>
 
-                                        <div class="text-right">
-                                            <p class="font-black">{{ $row->points }}</p>
-                                            <p class="text-xs font-bold text-[#080f2f]/45">pts</p>
-                                        </div>
-                                    </div>
-
-                                    <p class="mt-2 text-xs font-black {{ $row->qualified ? 'text-[#159447]' : 'text-[#e51b2b]' }}">
-                                        {{ $row->qualified ? 'Clasifica' : 'Fuera' }}
+                                    <p class="text-xs font-bold text-[#080f2f]/45">
+                                        Grupo {{ $row->group_name }}
                                     </p>
                                 </div>
-                            @endforeach
+
+                                <div class="text-right">
+                                    <p class="font-black">
+                                        {{ $row->points }}
+                                    </p>
+
+                                    <p class="text-xs font-bold text-[#080f2f]/45">
+                                        pts
+                                    </p>
+                                </div>
+                            </div>
+
+                            <p class="mt-2 text-xs font-black {{ $row->qualified ? 'text-[#159447]' : 'text-[#e51b2b]' }}">
+                                {{ $row->qualified ? 'Clasifica' : 'Fuera' }}
+                            </p>
                         </div>
-                    @endif
+                    @empty
+                        <p class="text-sm font-bold text-[#080f2f]/45">
+                            Todavía no hay terceros calculados.
+                        </p>
+                    @endforelse
                 </div>
             </div>
+        </div>
+
+        <div class="mt-12">
+            <h2 class="mb-5 text-3xl font-black text-[#080f2f]">
+                Dieciseisavos
+            </h2>
+
+            @if($bracketMatches->isEmpty())
+                <div class="rounded-[2rem] bg-white p-8 text-center font-black text-[#080f2f]/45 shadow-xl">
+                    Todavía no hay cruces generados.
+                </div>
+            @else
+                <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                    @foreach($bracketMatches as $match)
+                        <div class="rounded-3xl bg-white p-5 shadow-xl">
+                            <div class="mb-4 flex items-center justify-between">
+                                <p class="rounded-full bg-[#edf1ff] px-3 py-1 text-xs font-black text-[#1238ff]">
+                                    Partido {{ $match->match_number }}
+                                </p>
+
+                                <p class="text-xs font-black text-[#080f2f]/45">
+                                    Ronda 32
+                                </p>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="rounded-2xl bg-[#f4f6ff] p-4 text-center">
+                                    <p class="font-black text-[#080f2f]">
+                                        {{ $match->homeTeam->name }}
+                                    </p>
+                                </div>
+
+                                <div class="text-center text-xs font-black uppercase tracking-[0.25em] text-[#080f2f]/35">
+                                    vs
+                                </div>
+
+                                <div class="rounded-2xl bg-[#f4f6ff] p-4 text-center">
+                                    <p class="font-black text-[#080f2f]">
+                                        {{ $match->awayTeam->name }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 </section>

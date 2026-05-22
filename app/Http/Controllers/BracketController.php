@@ -15,9 +15,9 @@ class BracketController extends Controller
     {
         $users = User::orderBy('name')->get();
 
-        $selectedUserId = $request->get('user_id', Auth::id());
-
-        $selectedUser = User::findOrFail($selectedUserId);
+        $selectedUser = User::find(
+            $request->get('user_id', Auth::id())
+        ) ?? Auth::user();
 
         $standings = UserGroupStanding::with('team')
             ->where('user_id', $selectedUser->id)
@@ -34,7 +34,11 @@ class BracketController extends Controller
             ->orderByDesc('goals_for')
             ->get();
 
-        $bracketMatches = UserBracketMatch::with(['homeTeam', 'awayTeam'])
+        $bracketMatches = UserBracketMatch::with([
+            'homeTeam',
+            'awayTeam',
+            'predictedWinnerTeam',
+        ])
             ->where('user_id', $selectedUser->id)
             ->orderBy('round')
             ->orderBy('slot')
@@ -55,6 +59,6 @@ class BracketController extends Controller
 
         return redirect()
             ->route('bracket.simulator', ['user_id' => Auth::id()])
-            ->with('success', 'Simulación actualizada correctamente.');
+            ->with('success', 'Simulación generada correctamente.');
     }
 }
