@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\MatchGame;
 use App\Models\Prediction;
 use App\Models\User;
+use App\Models\UserBracketMatch;
+use App\Models\UserGroupStanding;
 use App\Services\BracketSimulatorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,42 +26,78 @@ class PredictionController extends Controller
             ->get()
             ->keyBy('match_game_id');
 
-        return view('predictions.index', compact('matches', 'predictions'));
+        $standings = UserGroupStanding::with('team')
+            ->where('user_id', Auth::id())
+            ->orderBy('group_name')
+            ->orderBy('position')
+            ->get()
+            ->groupBy('group_name');
+
+        $bestThirds = UserGroupStanding::with('team')
+            ->where('user_id', Auth::id())
+            ->where('position', 3)
+            ->orderByDesc('points')
+            ->orderByDesc('goal_difference')
+            ->orderByDesc('goals_for')
+            ->get();
+
+        $bracketMatches = UserBracketMatch::with([
+            'homeTeam',
+            'awayTeam',
+            'predictedWinnerTeam',
+        ])
+            ->where('user_id', Auth::id())
+            ->orderBy('slot')
+            ->get()
+            ->groupBy('round');
+
+        return view('predictions.index', compact(
+            'matches',
+            'predictions',
+            'standings',
+            'bestThirds',
+            'bracketMatches'
+        ));
     }
 
     public function store(Request $request, BracketSimulatorService $simulator)
     {
-        if (!$request->predictions) {
-            return back()->with('error', 'No hay pronósticos para guardar.');
-        }
+        if ($request->has('predictions')) {
+            foreach ($request->predictions as $matchId => $prediction) {
+                if (
+                    !isset($prediction['home']) ||
+                    !isset($prediction['away']) ||
+                    $prediction['home'] === '' ||
+                    $prediction['away'] === ''
+                ) {
+                    continue;
+                }
 
-        foreach ($request->predictions as $matchId => $prediction) {
-            if (
-                $prediction['home'] === null ||
-                $prediction['home'] === '' ||
-                $prediction['away'] === null ||
-                $prediction['away'] === ''
-            ) {
-                continue;
+                Prediction::updateOrCreate(
+                    [
+                        'user_id' => Auth::id(),
+                        'match_game_id' => $matchId,
+                    ],
+                    [
+                        'predicted_home_score' => $prediction['home'],
+                        'predicted_away_score' => $prediction['away'],
+                    ]
+                );
             }
 
-            Prediction::updateOrCreate(
-                [
-                    'user_id' => Auth::id(),
-                    'match_game_id' => $matchId,
-                ],
-                [
-                    'predicted_home_score' => $prediction['home'],
-                    'predicted_away_score' => $prediction['away'],
-                ]
+            $simulator->generateForUser(Auth::id());
+        }
+
+        if ($request->has('bracket')) {
+            $simulator->saveBracketPredictions(
+                Auth::id(),
+                $request->input('bracket', [])
             );
         }
 
-        $simulator->generateForUser(Auth::id());
-
         return redirect()
-            ->route('bracket.simulator', ['user_id' => Auth::id()])
-            ->with('success', 'Pronósticos guardados y simulación actualizada.');
+            ->route('predictions.index')
+            ->with('success', 'Quiniela guardada correctamente.');
     }
 
     public function publicList(Request $request)

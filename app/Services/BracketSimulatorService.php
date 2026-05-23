@@ -20,6 +20,46 @@ class BracketSimulatorService
         $this->generateRoundOf32($userId);
     }
 
+    public function saveBracketPredictions(int $userId, array $bracketPredictions): void
+    {
+        foreach ($bracketPredictions as $matchId => $prediction) {
+            $match = UserBracketMatch::where('user_id', $userId)
+                ->where('id', $matchId)
+                ->first();
+
+            if (!$match) {
+                continue;
+            }
+
+            $homeScore = $prediction['home'] ?? null;
+            $awayScore = $prediction['away'] ?? null;
+            $winnerId = $prediction['winner'] ?? null;
+
+            if ($homeScore === null || $homeScore === '' || $awayScore === null || $awayScore === '') {
+                continue;
+            }
+
+            $homeScore = (int) $homeScore;
+            $awayScore = (int) $awayScore;
+
+            if ($homeScore > $awayScore) {
+                $winnerId = $match->home_team_id;
+            } elseif ($awayScore > $homeScore) {
+                $winnerId = $match->away_team_id;
+            } else {
+                $winnerId = $winnerId ? (int) $winnerId : null;
+            }
+
+            $match->update([
+                'predicted_home_score' => $homeScore,
+                'predicted_away_score' => $awayScore,
+                'predicted_winner_team_id' => $winnerId,
+            ]);
+        }
+
+        $this->rebuildNextRounds($userId);
+    }
+
     private function generateGroupStandings(int $userId): void
     {
         $matches = MatchGame::with(['homeTeam', 'awayTeam'])
@@ -39,37 +79,37 @@ class BracketSimulatorService
                 continue;
             }
 
-            $homeTeam = $match->homeTeam;
-            $awayTeam = $match->awayTeam;
+            $teamA = $match->homeTeam;
+            $teamB = $match->awayTeam;
 
-            $this->addTeamToTable($table, $homeTeam, $match->group_name);
-            $this->addTeamToTable($table, $awayTeam, $match->group_name);
+            $this->addTeamToTable($table, $teamA, $match->group_name);
+            $this->addTeamToTable($table, $teamB, $match->group_name);
 
-            $homeScore = (int) $prediction->predicted_home_score;
-            $awayScore = (int) $prediction->predicted_away_score;
+            $scoreA = (int) $prediction->predicted_home_score;
+            $scoreB = (int) $prediction->predicted_away_score;
 
-            $table[$homeTeam->id]['played']++;
-            $table[$awayTeam->id]['played']++;
+            $table[$teamA->id]['played']++;
+            $table[$teamB->id]['played']++;
 
-            $table[$homeTeam->id]['goals_for'] += $homeScore;
-            $table[$homeTeam->id]['goals_against'] += $awayScore;
+            $table[$teamA->id]['goals_for'] += $scoreA;
+            $table[$teamA->id]['goals_against'] += $scoreB;
 
-            $table[$awayTeam->id]['goals_for'] += $awayScore;
-            $table[$awayTeam->id]['goals_against'] += $homeScore;
+            $table[$teamB->id]['goals_for'] += $scoreB;
+            $table[$teamB->id]['goals_against'] += $scoreA;
 
-            if ($homeScore > $awayScore) {
-                $table[$homeTeam->id]['won']++;
-                $table[$awayTeam->id]['lost']++;
-                $table[$homeTeam->id]['points'] += 3;
-            } elseif ($awayScore > $homeScore) {
-                $table[$awayTeam->id]['won']++;
-                $table[$homeTeam->id]['lost']++;
-                $table[$awayTeam->id]['points'] += 3;
+            if ($scoreA > $scoreB) {
+                $table[$teamA->id]['won']++;
+                $table[$teamB->id]['lost']++;
+                $table[$teamA->id]['points'] += 3;
+            } elseif ($scoreB > $scoreA) {
+                $table[$teamB->id]['won']++;
+                $table[$teamA->id]['lost']++;
+                $table[$teamB->id]['points'] += 3;
             } else {
-                $table[$homeTeam->id]['drawn']++;
-                $table[$awayTeam->id]['drawn']++;
-                $table[$homeTeam->id]['points']++;
-                $table[$awayTeam->id]['points']++;
+                $table[$teamA->id]['drawn']++;
+                $table[$teamB->id]['drawn']++;
+                $table[$teamA->id]['points']++;
+                $table[$teamB->id]['points']++;
             }
         }
 
@@ -187,20 +227,145 @@ class BracketSimulatorService
         ];
 
         foreach ($roundOf32 as $slot => $teams) {
-            $home = $this->resolveSlot($userId, $teams[0]);
-            $away = $this->resolveSlot($userId, $teams[1]);
+            $teamA = $this->resolveGroupPosition($userId, $teams[0]);
+            $teamB = $this->resolveGroupPosition($userId, $teams[1]);
 
             UserBracketMatch::create([
                 'user_id' => $userId,
                 'round' => 'Dieciseisavos',
                 'slot' => $slot,
-                'home_team_id' => $home?->team_id,
-                'away_team_id' => $away?->team_id,
+                'home_team_id' => $teamA?->team_id,
+                'away_team_id' => $teamB?->team_id,
                 'predicted_home_score' => null,
                 'predicted_away_score' => null,
                 'predicted_winner_team_id' => null,
             ]);
         }
+    }
+
+    private function rebuildNextRounds(int $userId): void
+    {
+        UserBracketMatch::where('user_id', $userId)
+            ->whereIn('round', [
+                'Octavos',
+                'Cuartos',
+                'Semifinales',
+                'Tercer lugar',
+                'Final',
+            ])
+            ->delete();
+
+        $this->generateRoundFromPrevious($userId, 'Octavos', [
+            89 => [73, 74],
+            90 => [75, 76],
+            91 => [77, 78],
+            92 => [79, 80],
+            93 => [81, 82],
+            94 => [83, 84],
+            95 => [85, 86],
+            96 => [87, 88],
+        ]);
+
+        $this->generateRoundFromPrevious($userId, 'Cuartos', [
+            97 => [89, 90],
+            98 => [91, 92],
+            99 => [93, 94],
+            100 => [95, 96],
+        ]);
+
+        $this->generateRoundFromPrevious($userId, 'Semifinales', [
+            101 => [97, 98],
+            102 => [99, 100],
+        ]);
+
+        $this->generateFinalAndThirdPlace($userId);
+    }
+
+    private function generateRoundFromPrevious(int $userId, string $round, array $matches): void
+    {
+        foreach ($matches as $slot => $sourceSlots) {
+            $teamA = $this->getWinnerTeamId($userId, $sourceSlots[0]);
+            $teamB = $this->getWinnerTeamId($userId, $sourceSlots[1]);
+
+            if (!$teamA || !$teamB) {
+                continue;
+            }
+
+            UserBracketMatch::create([
+                'user_id' => $userId,
+                'round' => $round,
+                'slot' => $slot,
+                'home_team_id' => $teamA,
+                'away_team_id' => $teamB,
+                'predicted_home_score' => null,
+                'predicted_away_score' => null,
+                'predicted_winner_team_id' => null,
+            ]);
+        }
+    }
+
+    private function generateFinalAndThirdPlace(int $userId): void
+    {
+        $semiA = UserBracketMatch::where('user_id', $userId)->where('slot', 101)->first();
+        $semiB = UserBracketMatch::where('user_id', $userId)->where('slot', 102)->first();
+
+        if (!$semiA || !$semiB) {
+            return;
+        }
+
+        if (!$semiA->predicted_winner_team_id || !$semiB->predicted_winner_team_id) {
+            return;
+        }
+
+        $finalTeamA = $semiA->predicted_winner_team_id;
+        $finalTeamB = $semiB->predicted_winner_team_id;
+
+        $thirdTeamA = $this->getLoserTeamIdFromMatch($semiA);
+        $thirdTeamB = $this->getLoserTeamIdFromMatch($semiB);
+
+        if ($thirdTeamA && $thirdTeamB) {
+            UserBracketMatch::create([
+                'user_id' => $userId,
+                'round' => 'Tercer lugar',
+                'slot' => 103,
+                'home_team_id' => $thirdTeamA,
+                'away_team_id' => $thirdTeamB,
+                'predicted_home_score' => null,
+                'predicted_away_score' => null,
+                'predicted_winner_team_id' => null,
+            ]);
+        }
+
+        UserBracketMatch::create([
+            'user_id' => $userId,
+            'round' => 'Final',
+            'slot' => 104,
+            'home_team_id' => $finalTeamA,
+            'away_team_id' => $finalTeamB,
+            'predicted_home_score' => null,
+            'predicted_away_score' => null,
+            'predicted_winner_team_id' => null,
+        ]);
+    }
+
+    private function getWinnerTeamId(int $userId, int $slot): ?int
+    {
+        return UserBracketMatch::where('user_id', $userId)
+            ->where('slot', $slot)
+            ->value('predicted_winner_team_id');
+    }
+
+    private function getLoserTeamIdFromMatch(UserBracketMatch $match): ?int
+    {
+        if (!$match->predicted_winner_team_id) {
+            return null;
+        }
+
+        if ((int) $match->predicted_winner_team_id === (int) $match->home_team_id) {
+            return $match->away_team_id;
+        }
+
+        return $match->home_team_id;
     }
 
     private function getThirdPlaceMap(string $thirdGroups): array
@@ -214,7 +379,7 @@ class BracketSimulatorService
         return $table[$thirdGroups];
     }
 
-    private function resolveSlot(int $userId, string $slot): ?UserGroupStanding
+    private function resolveGroupPosition(int $userId, string $slot): ?UserGroupStanding
     {
         $position = (int) substr($slot, 0, 1);
         $groupName = substr($slot, 1, 1);

@@ -40,7 +40,6 @@ class BracketController extends Controller
             'predictedWinnerTeam',
         ])
             ->where('user_id', $selectedUser->id)
-            ->orderBy('round')
             ->orderBy('slot')
             ->get();
 
@@ -53,8 +52,19 @@ class BracketController extends Controller
         ));
     }
 
-    public function generate(BracketSimulatorService $simulator)
+    public function generate(Request $request, BracketSimulatorService $simulator)
     {
+        if ($request->has('bracket')) {
+            $simulator->saveBracketPredictions(
+                Auth::id(),
+                $request->input('bracket', [])
+            );
+
+            return redirect()
+                ->route('bracket.simulator', ['user_id' => Auth::id()])
+                ->with('success', 'Marcadores de eliminatorias guardados.');
+        }
+
         $simulator->generateForUser(Auth::id());
 
         return redirect()

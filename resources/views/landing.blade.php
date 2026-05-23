@@ -22,14 +22,14 @@
             </h1>
 
             <p class="mt-7 max-w-xl text-lg font-medium leading-8 text-[#080f2f]/65">
-                Llená tus marcadores, revisá las quinielas de otros participantes
+                Llená tu quiniela completa por marcadores, revisá las quinielas de otros participantes
                 y seguí la tabla de puntos durante todo el torneo.
             </p>
 
             <div class="mt-9 flex flex-col gap-4 sm:flex-row">
                 @auth
-                    <a href="{{ route('dashboard') }}" class="rounded-2xl bg-[#1238ff] px-8 py-4 text-center font-black text-white shadow-lg">
-                        Ir al panel →
+                    <a href="{{ route('predictions.index') }}" class="rounded-2xl bg-[#1238ff] px-8 py-4 text-center font-black text-white shadow-lg">
+                        Ir a mi quiniela →
                     </a>
                 @else
                     <a href="{{ route('auth.google') }}" class="rounded-2xl bg-[#1238ff] px-8 py-4 text-center font-black text-white shadow-lg">
@@ -45,11 +45,18 @@
 
         <div class="rounded-[2rem] bg-white p-6 shadow-2xl">
             <div class="rounded-[1.5rem] bg-[#080f2f] p-6 text-white">
-                <p class="text-xs font-black uppercase tracking-[0.28em] text-white/45">Vista previa</p>
-                <h2 class="mt-2 text-3xl font-black">Camino al campeón</h2>
+                <p class="text-xs font-black uppercase tracking-[0.28em] text-white/45">
+                    Vista previa
+                </p>
+
+                <h2 class="mt-2 text-3xl font-black">
+                    Camino al campeón
+                </h2>
 
                 <div class="mt-6 rounded-3xl bg-[#f1f5ff] p-5 text-[#080f2f]">
-                    <p class="font-black text-[#080f2f]/65">Grupo A</p>
+                    <p class="font-black text-[#080f2f]/65">
+                        Grupo A
+                    </p>
 
                     <div class="mt-4 grid grid-cols-3 items-center gap-4">
                         <div class="rounded-2xl bg-[#1238ff] px-4 py-4 text-center font-black text-white">
@@ -79,37 +86,73 @@
 
                     <div class="rounded-2xl bg-[#ffc400] p-5 text-center text-[#080f2f]">
                         <p class="text-4xl font-black">1</p>
-                        <p class="mt-1 text-xs font-black uppercase tracking-widest">Premio</p>
+                        <p class="mt-1 text-xs font-black uppercase tracking-widest">Campeón</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="relative mx-auto mt-14 grid max-w-7xl overflow-hidden rounded-[2rem] shadow-2xl md:grid-cols-4">
-        <a href="{{ route('dashboard') }}" class="bg-[#1238ff] p-8 text-white">
-            <h3 class="text-2xl font-black">Tus pronósticos</h3>
-            <p class="mt-2 text-sm font-medium text-white/75">Completá los resultados de todos los partidos.</p>
-            <p class="mt-7 text-3xl">→</p>
-        </a>
+    @auth
+        <div class="relative mx-auto mt-14 grid max-w-7xl overflow-hidden rounded-[2rem] shadow-2xl md:grid-cols-4">
+            <a href="{{ route('predictions.index') }}" class="bg-[#1238ff] p-8 text-white">
+                <h3 class="text-2xl font-black">Mi Quiniela</h3>
+                <p class="mt-2 text-sm font-medium text-white/75">
+                    Llená marcadores desde grupos hasta campeón.
+                </p>
+                <p class="mt-7 text-3xl">→</p>
+            </a>
 
-        <a href="{{ route('bracket.simulator') }}" class="bg-[#e51b2b] p-8 text-white">
-            <h3 class="text-2xl font-black">Simulador</h3>
-            <p class="mt-2 text-sm font-medium text-white/75">Explorá grupos y mejores terceros.</p>
-            <p class="mt-7 text-3xl">→</p>
-        </a>
+            <a href="{{ route('predictions.public') }}" class="bg-[#e51b2b] p-8 text-white">
+                <h3 class="text-2xl font-black">Quinielas</h3>
+                <p class="mt-2 text-sm font-medium text-white/75">
+                    Revisá las quinielas de otros participantes.
+                </p>
+                <p class="mt-7 text-3xl">→</p>
+            </a>
 
-        <a href="{{ route('dashboard') }}" class="bg-[#159447] p-8 text-white">
-            <h3 class="text-2xl font-black">Tabla de puntos</h3>
-            <p class="mt-2 text-sm font-medium text-white/75">Seguimiento del ranking general.</p>
-            <p class="mt-7 text-3xl">→</p>
-        </a>
+            <a href="{{ route('ranking') }}" class="bg-[#159447] p-8 text-white">
+                <h3 class="text-2xl font-black">Ranking</h3>
+                <p class="mt-2 text-sm font-medium text-white/75">
+                    Seguimiento de puntos y posiciones.
+                </p>
+                <p class="mt-7 text-3xl">→</p>
+            </a>
 
-        <a href="{{ route('rules') }}" class="bg-[#ffc400] p-8 text-[#080f2f]">
-            <h3 class="text-2xl font-black">Premio final</h3>
-            <p class="mt-2 text-sm font-medium text-[#080f2f]/70">Un solo ganador al final del torneo.</p>
-            <p class="mt-7 text-3xl">→</p>
-        </a>
-    </div>
+            <a href="{{ route('results.index') }}" class="bg-[#ffc400] p-8 text-[#080f2f]">
+                <h3 class="text-2xl font-black">Resultados</h3>
+                <p class="mt-2 text-sm font-medium text-[#080f2f]/70">
+                    Marcadores reales del torneo.
+                </p>
+                <p class="mt-7 text-3xl">→</p>
+            </a>
+        </div>
+    @else
+        <div class="relative mx-auto mt-14 grid max-w-7xl overflow-hidden rounded-[2rem] shadow-2xl md:grid-cols-3">
+            <a href="{{ route('auth.google') }}" class="bg-[#1238ff] p-8 text-white">
+                <h3 class="text-2xl font-black">Entrar</h3>
+                <p class="mt-2 text-sm font-medium text-white/75">
+                    Iniciá sesión para llenar tu quiniela.
+                </p>
+                <p class="mt-7 text-3xl">→</p>
+            </a>
+
+            <a href="{{ route('rules') }}" class="bg-[#e51b2b] p-8 text-white">
+                <h3 class="text-2xl font-black">Reglamento</h3>
+                <p class="mt-2 text-sm font-medium text-white/75">
+                    Consultá las reglas de puntuación.
+                </p>
+                <p class="mt-7 text-3xl">→</p>
+            </a>
+
+            <a href="{{ route('ranking') }}" class="bg-[#159447] p-8 text-white">
+                <h3 class="text-2xl font-black">Ranking</h3>
+                <p class="mt-2 text-sm font-medium text-white/75">
+                    Tabla general de participantes.
+                </p>
+                <p class="mt-7 text-3xl">→</p>
+            </a>
+        </div>
+    @endauth
 </section>
 @endsection

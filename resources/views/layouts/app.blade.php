@@ -27,16 +27,30 @@
                 </a>
 
                 <nav class="hidden items-center gap-5 md:flex">
-                    <a href="{{ route('landing') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Inicio</a>
-                    <a href="{{ route('rules') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Reglamento</a>
+                    <a href="{{ route('landing') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">
+                        Inicio
+                    </a>
+
+                    <a href="{{ route('rules') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">
+                        Reglamento
+                    </a>
 
                     @auth
-                        <a href="{{ route('dashboard') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Panel</a>
-                        <a href="{{ route('predictions.index') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Pronósticos</a>
-                        <a href="{{ route('predictions.public') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Quinielas</a>
-                        <a href="{{ route('bracket.simulator') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Simulador</a>
-                        <a href="{{ route('ranking') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">Ranking</a>
-                        <a href="{{ route('results.index') }}" class="text-sm font-bold text-[#e51b2b] hover:text-[#1238ff]">Resultados</a>
+                        <a href="{{ route('predictions.index') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">
+                            Mi Quiniela
+                        </a>
+
+                        <a href="{{ route('predictions.public') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">
+                            Quinielas
+                        </a>
+
+                        <a href="{{ route('ranking') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">
+                            Ranking
+                        </a>
+
+                        <a href="{{ route('results.index') }}" class="text-sm font-bold text-[#e51b2b] hover:text-[#1238ff]">
+                            Resultados
+                        </a>
                     @endauth
                 </nav>
 
