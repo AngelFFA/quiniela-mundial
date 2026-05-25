@@ -2,467 +2,979 @@
 
 @section('content')
 @php
-    $roundOrder = [
-        'Dieciseisavos',
-        'Octavos',
-        'Cuartos',
-        'Semifinales',
-        'Tercer lugar',
-        'Final',
+    use Illuminate\Support\Carbon;
+
+    $groupBuckets = [
+        'set_1' => ['A', 'B', 'C', 'D'],
+        'set_2' => ['E', 'F', 'G', 'H'],
+        'set_3' => ['I', 'J', 'K', 'L'],
     ];
 
-    $finalMatch = ($bracketMatches['Final'] ?? collect())->first();
-    $champion = $finalMatch?->predictedWinnerTeam;
+    $totalMatches = $matches->flatten(1)->count();
+
+    $completedMatches = $predictions->filter(function ($prediction) {
+        return $prediction->predicted_home_score !== null
+            && $prediction->predicted_away_score !== null;
+    })->count();
+
+    $progress = $totalMatches > 0 ? round(($completedMatches / $totalMatches) * 100) : 0;
+
+    $standings = $standings ?? collect();
+    $bestThirds = $bestThirds ?? collect();
+    $bracketMatches = collect($bracketMatches ?? []);
+
+    $flagUrl = function ($team) {
+        if (!$team || !$team->flag) {
+            return null;
+        }
+
+        if (str_starts_with($team->flag, 'http')) {
+            return $team->flag;
+        }
+
+        return 'https://flagcdn.com/w80/' . strtolower($team->flag) . '.png';
+    };
+
+    $getSlot = function ($slot) use ($bracketMatches) {
+        return $bracketMatches->firstWhere('slot', $slot);
+    };
+
+    $roundColumns = [
+        [
+            'title' => 'Round of 32',
+            'class' => 'level-1',
+            'side' => '',
+            'slots' => [74, 77, 73, 75, 83, 84, 81, 82],
+        ],
+        [
+            'title' => 'R16',
+            'class' => 'level-2',
+            'side' => '',
+            'slots' => [89, 90, 93, 94],
+        ],
+        [
+            'title' => 'QF',
+            'class' => 'level-3',
+            'side' => '',
+            'slots' => [97, 98],
+        ],
+        [
+            'title' => 'SF',
+            'class' => 'level-4',
+            'side' => '',
+            'slots' => [101],
+        ],
+        [
+            'title' => 'Final',
+            'class' => 'level-5',
+            'side' => '',
+            'slots' => [104, 103],
+        ],
+        [
+            'title' => 'SF',
+            'class' => 'level-4',
+            'side' => 'right',
+            'slots' => [102],
+        ],
+        [
+            'title' => 'QF',
+            'class' => 'level-3',
+            'side' => 'right',
+            'slots' => [99, 100],
+        ],
+        [
+            'title' => 'R16',
+            'class' => 'level-2',
+            'side' => 'right',
+            'slots' => [91, 92, 95, 96],
+        ],
+        [
+            'title' => 'Round of 32',
+            'class' => 'level-1',
+            'side' => 'right',
+            'slots' => [76, 78, 79, 80, 86, 88, 85, 87],
+        ],
+    ];
+
+    $activeTab = $activeTab ?? 'groups';
 @endphp
 
-<section class="relative px-6 py-10">
-    <div class="absolute -left-32 top-20 h-[420px] w-[420px] rounded-full bg-[#1238ff]"></div>
-    <div class="absolute -left-20 top-72 h-[340px] w-[340px] rounded-full bg-[#159447]"></div>
-    <div class="absolute -right-16 top-16 h-[430px] w-[430px] rounded-full bg-[#e51b2b]"></div>
-    <div class="absolute right-[-100px] top-[360px] h-[420px] w-[420px] rounded-full bg-[#ffc400]"></div>
+<style>
+    .main-tab-btn,
+    .sub-tab-btn {
+        border: 1px solid #dbe2f1;
+        background: #ffffff;
+        color: #5d6785;
+        font-weight: 900;
+        transition: 0.2s ease;
+    }
 
-    <div class="relative mx-auto max-w-7xl">
-        <div class="grid gap-8 lg:grid-cols-[1fr_360px]">
+    .main-tab-btn.active,
+    .sub-tab-btn.active {
+        background: #1238ff;
+        border-color: #1238ff;
+        color: #ffffff;
+        box-shadow: 0 10px 30px rgba(18, 56, 255, 0.18);
+    }
+
+    .main-tab-panel,
+    .group-tab-panel {
+        display: none;
+    }
+
+    .main-tab-panel.active,
+    .group-tab-panel.active {
+        display: block;
+    }
+
+    .bracket-board {
+        width: 100%;
+        overflow: hidden;
+        border-radius: 28px;
+        background: linear-gradient(135deg, #071833 0%, #0b2145 55%, #061329 100%);
+        padding: 18px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .bracket-grid {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1.22fr 1.06fr 0.96fr 0.88fr 1.08fr 0.88fr 0.96fr 1.06fr 1.22fr;
+        gap: 10px;
+        align-items: start;
+    }
+
+    .bracket-stage-title {
+        height: 22px;
+        text-align: center;
+        font-size: 8px;
+        letter-spacing: 0.12em;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.72);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        white-space: nowrap;
+    }
+
+    .bracket-column {
+        position: relative;
+        height: 1010px;
+    }
+
+    .bracket-match {
+        position: absolute;
+        left: 0;
+        right: 0;
+        min-height: 104px;
+        border-radius: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: linear-gradient(180deg, rgba(15, 39, 78, 0.98) 0%, rgba(8, 25, 53, 0.98) 100%);
+        padding: 7px;
+        color: white;
+        box-shadow:
+            0 10px 22px rgba(0, 0, 0, 0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .bracket-match::before,
+    .bracket-match::after {
+        display: none;
+        content: none;
+    }
+
+    .bracket-column.level-1 .bracket-match:nth-child(1) { top: 0; }
+    .bracket-column.level-1 .bracket-match:nth-child(2) { top: 128px; }
+    .bracket-column.level-1 .bracket-match:nth-child(3) { top: 256px; }
+    .bracket-column.level-1 .bracket-match:nth-child(4) { top: 384px; }
+    .bracket-column.level-1 .bracket-match:nth-child(5) { top: 512px; }
+    .bracket-column.level-1 .bracket-match:nth-child(6) { top: 640px; }
+    .bracket-column.level-1 .bracket-match:nth-child(7) { top: 768px; }
+    .bracket-column.level-1 .bracket-match:nth-child(8) { top: 896px; }
+
+    .bracket-column.level-2 .bracket-match:nth-child(1) { top: 64px; }
+    .bracket-column.level-2 .bracket-match:nth-child(2) { top: 320px; }
+    .bracket-column.level-2 .bracket-match:nth-child(3) { top: 576px; }
+    .bracket-column.level-2 .bracket-match:nth-child(4) { top: 832px; }
+
+    .bracket-column.level-3 .bracket-match:nth-child(1) { top: 192px; }
+    .bracket-column.level-3 .bracket-match:nth-child(2) { top: 704px; }
+
+    .bracket-column.level-4 .bracket-match:nth-child(1) { top: 448px; }
+
+    .bracket-column.level-5 .bracket-match:nth-child(1) { top: 382px; }
+    .bracket-column.level-5 .bracket-match:nth-child(2) { top: 536px; }
+
+    .bracket-code {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #1238ff;
+        padding: 2px 7px;
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        color: white;
+    }
+
+    .bracket-team-line {
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr) 28px;
+        align-items: center;
+        gap: 4px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.075);
+        padding: 4px;
+    }
+
+    .bracket-team-line + .bracket-team-line {
+        margin-top: 4px;
+    }
+
+    .bracket-team-line img {
+        width: 18px;
+        height: 13px;
+        border-radius: 3px;
+        object-fit: cover;
+    }
+
+    .bracket-team-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 8px;
+        font-weight: 900;
+        color: #ffffff;
+    }
+
+    .bracket-score-input {
+        height: 22px;
+        width: 28px;
+        border: 0;
+        border-radius: 7px;
+        background: #ffffff;
+        text-align: center;
+        font-size: 10px;
+        font-weight: 900;
+        color: #080f2f;
+        outline: none;
+    }
+
+    .bracket-score-input:focus {
+        box-shadow: 0 0 0 2px rgba(18, 56, 255, 0.5);
+    }
+
+    .bracket-winner-select {
+        display: block;
+        margin-top: 5px;
+        width: 100%;
+        height: 24px;
+        border: 0;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 0 5px;
+        font-size: 8px;
+        font-weight: 800;
+        color: #080f2f;
+        outline: none;
+    }
+
+    .bracket-winner-select:focus {
+        box-shadow: 0 0 0 2px rgba(18, 56, 255, 0.5);
+    }
+
+    @media (max-width: 1279px) {
+        .bracket-board {
+            padding: 10px;
+        }
+
+        .bracket-grid {
+            gap: 4px;
+            grid-template-columns: repeat(9, minmax(0, 1fr));
+        }
+
+        .bracket-stage-title {
+            font-size: 6px;
+            letter-spacing: 0.05em;
+            margin-bottom: 5px;
+        }
+
+        .bracket-column {
+            height: 930px;
+        }
+
+        .bracket-match {
+            min-height: 96px;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .bracket-column.level-1 .bracket-match:nth-child(1) { top: 0; }
+        .bracket-column.level-1 .bracket-match:nth-child(2) { top: 118px; }
+        .bracket-column.level-1 .bracket-match:nth-child(3) { top: 236px; }
+        .bracket-column.level-1 .bracket-match:nth-child(4) { top: 354px; }
+        .bracket-column.level-1 .bracket-match:nth-child(5) { top: 472px; }
+        .bracket-column.level-1 .bracket-match:nth-child(6) { top: 590px; }
+        .bracket-column.level-1 .bracket-match:nth-child(7) { top: 708px; }
+        .bracket-column.level-1 .bracket-match:nth-child(8) { top: 826px; }
+
+        .bracket-column.level-2 .bracket-match:nth-child(1) { top: 59px; }
+        .bracket-column.level-2 .bracket-match:nth-child(2) { top: 295px; }
+        .bracket-column.level-2 .bracket-match:nth-child(3) { top: 531px; }
+        .bracket-column.level-2 .bracket-match:nth-child(4) { top: 767px; }
+
+        .bracket-column.level-3 .bracket-match:nth-child(1) { top: 177px; }
+        .bracket-column.level-3 .bracket-match:nth-child(2) { top: 649px; }
+
+        .bracket-column.level-4 .bracket-match:nth-child(1) { top: 413px; }
+
+        .bracket-column.level-5 .bracket-match:nth-child(1) { top: 354px; }
+        .bracket-column.level-5 .bracket-match:nth-child(2) { top: 502px; }
+
+        .bracket-code {
+            font-size: 6px;
+            padding: 1px 4px;
+        }
+
+        .bracket-team-line {
+            grid-template-columns: 11px 1fr 18px;
+            gap: 2px;
+            border-radius: 6px;
+            padding: 3px;
+        }
+
+        .bracket-team-line img {
+            width: 11px;
+            height: 8px;
+        }
+
+        .bracket-team-name {
+            font-size: 6px;
+        }
+
+        .bracket-score-input {
+            width: 22px;
+            height: 20px;
+            font-size: 7px;
+            border-radius: 5px;
+        }
+
+        .bracket-winner-select {
+            height: 22px;
+            font-size: 6px;
+            border-radius: 5px;
+            padding: 0 2px;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .bracket-board {
+            padding: 6px;
+            border-radius: 18px;
+            overflow-x: auto;
+        }
+
+        .bracket-grid {
+            min-width: 980px;
+            gap: 4px;
+        }
+
+        .bracket-column {
+            height: 900px;
+        }
+
+        .bracket-match {
+            min-height: 94px;
+        }
+    }
+
+    .winner-card {
+        background: linear-gradient(180deg, #102554 0%, #091935 100%);
+        border: 1px solid rgba(255, 196, 0, 0.45);
+    }
+
+    .third-card {
+        background: linear-gradient(180deg, #3a1d00 0%, #241300 100%);
+        border: 1px solid rgba(255, 138, 0, 0.45);
+    }
+
+    .table-header {
+        display: grid;
+        align-items: center;
+        gap: 8px;
+        border-radius: 16px;
+        background: #1238ff;
+        color: white;
+        padding: 10px 12px;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .standing-header {
+        grid-template-columns: 34px 28px 1fr 50px 50px;
+    }
+
+    .thirds-header {
+        grid-template-columns: 60px 34px 1fr 80px 80px 130px;
+    }
+
+</style>
+
+<section class="px-6 py-10">
+    <div class="mx-auto max-w-7xl">
+        <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
             <div>
-                <div class="inline-flex rounded-full bg-[#edf1ff] px-5 py-2 text-xs font-black uppercase tracking-[0.25em] text-[#1238ff]">
-                    Mi quiniela completa
+                <div class="inline-flex rounded-full bg-[#edf1ff] px-5 py-2 text-xs font-black uppercase tracking-[0.28em] text-[#1238ff]">
+                    Mi Quiniela
                 </div>
 
-                <h1 class="mt-5 text-5xl font-black leading-tight text-[#080f2f] md:text-6xl">
-                    Marcadores del Mundial 2026
+                <h1 class="mt-5 text-4xl font-black text-[#080f2f] md:text-6xl">
+                    Completá tu quiniela
                 </h1>
 
                 <p class="mt-4 max-w-3xl text-base font-medium leading-7 text-[#080f2f]/65">
-                    Llená tus marcadores por pestañas. Primero grupos, luego tablas, mejores terceros y eliminatorias.
+                    En esta misma pantalla llenás grupos, ves tablas, mejores terceros y la llave completa del torneo.
                 </p>
             </div>
 
-            <div class="rounded-[2rem] bg-[#080f2f] p-7 text-white shadow-2xl">
-                <p class="text-sm font-bold uppercase tracking-[0.25em] text-white/45">
-                    Participante
-                </p>
+            <div class="rounded-[2rem] bg-[#080f2f] p-5 text-white shadow-2xl">
+                <p class="text-[11px] font-black uppercase tracking-[0.26em] text-white/50">Resumen</p>
 
-                <h2 class="mt-3 text-3xl font-black">
-                    {{ Auth::user()->name }}
-                </h2>
-
-                @if($champion)
-                    <div class="mt-5 rounded-2xl bg-white/10 p-4">
-                        <p class="text-xs font-black uppercase tracking-[0.2em] text-white/45">
-                            Campeón pronosticado
-                        </p>
-                        <p class="mt-2 text-2xl font-black">
-                            {{ $champion->name }}
-                        </p>
+                <div class="mt-4 grid grid-cols-3 gap-3">
+                    <div class="rounded-2xl bg-[#1238ff] p-3 text-center">
+                        <p class="text-2xl font-black">{{ $completedMatches }}</p>
+                        <p class="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/70">Guardados</p>
                     </div>
-                @else
-                    <p class="mt-3 text-sm leading-6 text-white/65">
-                        La quiniela se irá completando según tus marcadores.
-                    </p>
-                @endif
+
+                    <div class="rounded-2xl bg-[#159447] p-3 text-center">
+                        <p class="text-2xl font-black">{{ $totalMatches }}</p>
+                        <p class="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-white/70">Partidos</p>
+                    </div>
+
+                    <div class="rounded-2xl bg-[#ffc400] p-3 text-center text-[#080f2f]">
+                        <p class="text-2xl font-black">{{ $progress }}%</p>
+                        <p class="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-[#080f2f]/75">Avance</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
+                    <div class="h-full rounded-full bg-[#1238ff]" style="width: {{ $progress }}%;"></div>
+                </div>
+
+                <p class="mt-4 text-sm font-medium text-white/65">
+                    Guardá tus grupos y abajo mismo vas viendo clasificación, mejores terceros y cruces.
+                </p>
             </div>
         </div>
 
         @if(session('success'))
-            <div class="mt-6 rounded-2xl bg-[#dcfce7] px-5 py-4 text-sm font-black text-[#166534]">
+            <div class="mt-6 rounded-3xl border border-[#159447]/20 bg-[#159447]/10 px-5 py-4 text-sm font-bold text-[#0c6f32]">
                 {{ session('success') }}
             </div>
         @endif
 
         @if(session('error'))
-            <div class="mt-6 rounded-2xl bg-[#fee2e2] px-5 py-4 text-sm font-black text-[#991b1b]">
+            <div class="mt-6 rounded-3xl border border-[#e51b2b]/20 bg-[#e51b2b]/10 px-5 py-4 text-sm font-bold text-[#b61522]">
                 {{ session('error') }}
             </div>
         @endif
 
-        <div class="mt-8 rounded-[2rem] bg-white p-3 shadow-2xl">
-            <div class="grid gap-2 md:grid-cols-4 xl:grid-cols-8">
-                <button type="button" onclick="mostrarTab('grupos')" id="btn-grupos" class="tab-btn rounded-2xl bg-[#1238ff] px-4 py-3 text-sm font-black text-white">
-                    Grupos
+        <div class="mt-8 rounded-[2rem] bg-white p-4 shadow-xl ring-1 ring-black/5">
+            <div class="grid gap-3 md:grid-cols-4">
+                <button type="button" class="main-tab-btn active rounded-2xl px-4 py-3 text-sm" data-main-tab="groups">
+                    Pronósticos
                 </button>
 
-                <button type="button" onclick="mostrarTab('tablas')" id="btn-tablas" class="tab-btn rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-black text-[#080f2f]">
+                <button type="button" class="main-tab-btn rounded-2xl px-4 py-3 text-sm" data-main-tab="tables">
                     Tablas
                 </button>
 
-                <button type="button" onclick="mostrarTab('terceros')" id="btn-terceros" class="tab-btn rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-black text-[#080f2f]">
-                    Terceros
-                </button>
-
-                <button type="button" onclick="mostrarTab('dieciseisavos')" id="btn-dieciseisavos" class="tab-btn rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-black text-[#080f2f]">
-                    16avos
-                </button>
-
-                <button type="button" onclick="mostrarTab('octavos')" id="btn-octavos" class="tab-btn rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-black text-[#080f2f]">
-                    Octavos
-                </button>
-
-                <button type="button" onclick="mostrarTab('cuartos')" id="btn-cuartos" class="tab-btn rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-black text-[#080f2f]">
-                    Cuartos
-                </button>
-
-                <button type="button" onclick="mostrarTab('semis')" id="btn-semis" class="tab-btn rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-black text-[#080f2f]">
-                    Semis
-                </button>
-
-                <button type="button" onclick="mostrarTab('final')" id="btn-final" class="tab-btn rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-black text-[#080f2f]">
-                    Final
-                </button>
-            </div>
-        </div>
-
-        <div id="tab-grupos" class="tab-content mt-8">
-            <form method="POST" action="{{ route('predictions.store') }}">
-                @csrf
-
-                <div class="rounded-[2rem] bg-white p-7 shadow-2xl">
-                    <div class="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <h2 class="text-3xl font-black text-[#080f2f]">
-                                Fase de grupos
-                            </h2>
-
-                            <p class="mt-2 text-sm font-medium text-[#080f2f]/60">
-                                Completá los marcadores y guardá para generar tablas y cruces.
-                            </p>
-                        </div>
-
-                        <button type="submit" class="rounded-2xl bg-[#1238ff] px-7 py-4 text-sm font-black text-white shadow-xl">
-                            Guardar grupos
-                        </button>
-                    </div>
-
-                    @if($matches->isEmpty())
-                        <div class="rounded-2xl bg-[#f4f6ff] p-8 text-center font-bold text-[#080f2f]/50">
-                            Todavía no hay partidos cargados.
-                        </div>
-                    @else
-                        <div class="grid gap-5 lg:grid-cols-2">
-                            @foreach($matches as $groupName => $games)
-                                @php
-                                    $groupColors = ['#1238ff', '#e51b2b', '#159447', '#7c3aed', '#ffc400', '#ff7a1a'];
-                                    $groupColor = $groupColors[($loop->iteration - 1) % count($groupColors)];
-                                    $textColor = in_array($groupColor, ['#ffc400', '#ff7a1a']) ? '#080f2f' : '#ffffff';
-                                @endphp
-
-                                <div class="overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-black/5">
-                                    <div class="px-6 py-4" style="background-color: {{ $groupColor }}; color: {{ $textColor }};">
-                                        <div class="flex items-center justify-between">
-                                            <h3 class="text-xl font-black">Grupo {{ $groupName }}</h3>
-                                            <span class="text-sm font-black opacity-80">{{ $games->count() }} partidos</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-4 bg-white p-5">
-                                        @foreach($games->sortBy('match_date') as $match)
-                                            @php
-                                                $prediction = $predictions[$match->id] ?? null;
-                                            @endphp
-
-                                            <div class="rounded-3xl bg-[#f4f6ff] p-5">
-                                                <div class="mb-4 flex items-center justify-between">
-                                                    <p class="text-sm font-black text-[#080f2f]/50">
-                                                        {{ optional($match->match_date)->format('d/m/Y') ?? 'Sin fecha' }}
-                                                    </p>
-
-                                                    <p class="rounded-full bg-white px-3 py-1 text-xs font-black text-[#080f2f]/50">
-                                                        Grupo {{ $groupName }}
-                                                    </p>
-                                                </div>
-
-                                                <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-                                                    <div class="text-center">
-                                                        <img
-                                                            src="https://flagcdn.com/w80/{{ $match->homeTeam->flag }}.png"
-                                                            class="mx-auto h-10 w-14 rounded-md object-cover shadow"
-                                                            alt="{{ $match->homeTeam->name }}"
-                                                        >
-
-                                                        <p class="mt-2 text-sm font-black text-[#080f2f]">
-                                                            {{ $match->homeTeam->name }}
-                                                        </p>
-                                                    </div>
-
-                                                    <div class="flex items-center justify-center gap-2">
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            name="predictions[{{ $match->id }}][home]"
-                                                            value="{{ $prediction?->predicted_home_score !== null ? $prediction->predicted_home_score : '' }}"
-                                                            class="h-14 w-16 rounded-2xl border border-[#080f2f]/10 bg-white text-center text-xl font-black text-[#080f2f] outline-none shadow-sm"
-                                                        >
-
-                                                        <span class="font-black text-[#080f2f]/35">-</span>
-
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            name="predictions[{{ $match->id }}][away]"
-                                                            value="{{ $prediction?->predicted_away_score !== null ? $prediction->predicted_away_score : '' }}"
-                                                            class="h-14 w-16 rounded-2xl border border-[#080f2f]/10 bg-white text-center text-xl font-black text-[#080f2f] outline-none shadow-sm"
-                                                        >
-                                                    </div>
-
-                                                    <div class="text-center">
-                                                        <img
-                                                            src="https://flagcdn.com/w80/{{ $match->awayTeam->flag }}.png"
-                                                            class="mx-auto h-10 w-14 rounded-md object-cover shadow"
-                                                            alt="{{ $match->awayTeam->name }}"
-                                                        >
-
-                                                        <p class="mt-2 text-sm font-black text-[#080f2f]">
-                                                            {{ $match->awayTeam->name }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </form>
-        </div>
-
-        <div id="tab-tablas" class="tab-content mt-8 hidden">
-            <div class="rounded-[2rem] bg-white p-7 shadow-2xl">
-                <h2 class="mb-6 text-3xl font-black text-[#080f2f]">
-                    Tablas de grupos
-                </h2>
-
-                @if($standings->isEmpty())
-                    <div class="rounded-2xl bg-[#f4f6ff] p-8 text-center font-bold text-[#080f2f]/50">
-                        Guardá primero los marcadores de grupos.
-                    </div>
-                @else
-                    <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                        @foreach($standings as $groupName => $teams)
-                            <div class="overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-black/5">
-                                <div class="bg-[#080f2f] px-5 py-4 text-white">
-                                    <h3 class="text-xl font-black">Grupo {{ $groupName }}</h3>
-                                </div>
-
-                                <table class="w-full text-sm">
-                                    <thead class="bg-[#f4f6ff] text-[#080f2f]/45">
-                                        <tr>
-                                            <th class="px-4 py-3 text-left">#</th>
-                                            <th class="px-4 py-3 text-left">Equipo</th>
-                                            <th class="px-4 py-3 text-center">PTS</th>
-                                            <th class="px-4 py-3 text-center">DG</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody class="divide-y divide-slate-100">
-                                        @foreach($teams as $row)
-                                            <tr>
-                                                <td class="px-4 py-3 font-black">{{ $row->position }}</td>
-                                                <td class="px-4 py-3">
-                                                    <p class="font-black">{{ $row->team->name }}</p>
-                                                    <p class="text-xs font-bold {{ $row->qualified ? 'text-[#159447]' : 'text-[#080f2f]/35' }}">
-                                                        {{ $row->qualified ? ucfirst($row->qualification_type) : 'Eliminado' }}
-                                                    </p>
-                                                </td>
-                                                <td class="px-4 py-3 text-center font-black">{{ $row->points }}</td>
-                                                <td class="px-4 py-3 text-center font-bold">{{ $row->goal_difference }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-        </div>
-
-        <div id="tab-terceros" class="tab-content mt-8 hidden">
-            <div class="rounded-[2rem] bg-white p-7 shadow-2xl">
-                <h2 class="mb-6 text-3xl font-black text-[#080f2f]">
+                <button type="button" class="main-tab-btn rounded-2xl px-4 py-3 text-sm" data-main-tab="thirds">
                     Mejores terceros
-                </h2>
+                </button>
 
-                @if($bestThirds->isEmpty())
-                    <div class="rounded-2xl bg-[#f4f6ff] p-8 text-center font-bold text-[#080f2f]/50">
-                        Guardá primero los marcadores de grupos.
-                    </div>
-                @else
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        @foreach($bestThirds as $index => $row)
-                            <div class="rounded-3xl bg-[#f4f6ff] p-5">
-                                <div class="flex items-center justify-between gap-4">
-                                    <div>
-                                        <p class="text-lg font-black text-[#080f2f]">
-                                            {{ $index + 1 }}. {{ $row->team->name }}
-                                        </p>
-
-                                        <p class="mt-1 text-sm font-bold text-[#080f2f]/45">
-                                            Grupo {{ $row->group_name }}
-                                        </p>
-                                    </div>
-
-                                    <div class="text-right">
-                                        <p class="text-2xl font-black text-[#080f2f]">
-                                            {{ $row->points }}
-                                        </p>
-                                        <p class="text-xs font-bold text-[#080f2f]/45">
-                                            pts
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <p class="mt-4 text-sm font-black {{ $row->qualified ? 'text-[#159447]' : 'text-[#e51b2b]' }}">
-                                    {{ $row->qualified ? 'Clasifica' : 'Fuera' }}
-                                </p>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
+                <button type="button" class="main-tab-btn rounded-2xl px-4 py-3 text-sm" data-main-tab="bracket">
+                    Llave
+                </button>
             </div>
         </div>
 
-        @foreach([
-            'dieciseisavos' => 'Dieciseisavos',
-            'octavos' => 'Octavos',
-            'cuartos' => 'Cuartos',
-            'semis' => 'Semifinales',
-            'final' => 'Final',
-        ] as $tabId => $roundName)
-            <div id="tab-{{ $tabId }}" class="tab-content mt-8 hidden">
+        <div class="mt-6">
+            <div class="main-tab-panel active" data-main-panel="groups">
                 <form method="POST" action="{{ route('predictions.store') }}">
                     @csrf
+                    <input type="hidden" name="active_tab" value="tables">
 
-                    <div class="rounded-[2rem] bg-white p-7 shadow-2xl">
-                        <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div class="rounded-[2rem] bg-white p-6 shadow-xl ring-1 ring-black/5">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                             <div>
-                                <h2 class="text-3xl font-black text-[#080f2f]">
-                                    {{ $roundName }}
-                                </h2>
-
-                                <p class="mt-2 text-sm font-medium text-[#080f2f]/55">
-                                    Guardá los marcadores de esta ronda. Si hay empate, seleccioná quién clasifica.
+                                <h2 class="text-2xl font-black text-[#080f2f]">Fase de grupos</h2>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    Llená los marcadores. Al guardar, se recalculan tus tablas y cruces.
                                 </p>
                             </div>
 
-                            <button type="submit" class="rounded-2xl bg-[#1238ff] px-7 py-4 text-sm font-black text-white shadow-xl">
-                                Guardar ronda
+                            <button
+                                type="submit"
+                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1]"
+                            >
+                                Guardar y actualizar
                             </button>
                         </div>
 
-                        @php
-                            $roundMatches = $bracketMatches[$roundName] ?? collect();
-                        @endphp
+                        <div class="mt-6 grid gap-3 md:grid-cols-3">
+                            <button type="button" class="sub-tab-btn active rounded-2xl px-4 py-3 text-sm" data-group-tab="set_1">
+                                Grupos A - D
+                            </button>
 
-                        @if($roundMatches->isEmpty())
-                            <div class="rounded-2xl bg-[#f4f6ff] p-8 text-center font-bold text-[#080f2f]/50">
-                                Esta ronda todavía está pendiente.
-                            </div>
-                        @else
-                            <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                                @foreach($roundMatches as $match)
-                                    <div class="rounded-3xl bg-[#f4f6ff] p-5 shadow-lg">
-                                        <div class="mb-4 flex items-center justify-between">
-                                            <span class="rounded-full bg-white px-3 py-1 text-xs font-black text-[#080f2f]/55">
-                                                M{{ $match->slot }}
-                                            </span>
+                            <button type="button" class="sub-tab-btn rounded-2xl px-4 py-3 text-sm" data-group-tab="set_2">
+                                Grupos E - H
+                            </button>
 
-                                            @if($match->predictedWinnerTeam)
-                                                <span class="rounded-full bg-[#dcfce7] px-3 py-1 text-xs font-black text-[#166534]">
-                                                    {{ $match->predictedWinnerTeam->name }}
-                                                </span>
-                                            @endif
+                            <button type="button" class="sub-tab-btn rounded-2xl px-4 py-3 text-sm" data-group-tab="set_3">
+                                Grupos I - L
+                            </button>
+                        </div>
+
+                        @foreach($groupBuckets as $bucketKey => $bucketGroups)
+                            <div class="group-tab-panel {{ $bucketKey === 'set_1' ? 'active' : '' }} mt-6" data-group-panel="{{ $bucketKey }}">
+                                <div class="grid gap-6 xl:grid-cols-2">
+                                    @foreach($bucketGroups as $groupLetter)
+                                        @php
+                                            $groupMatches = $matches->get($groupLetter, collect());
+                                            $groupDone = $groupMatches->filter(function ($match) use ($predictions) {
+                                                $prediction = $predictions->get($match->id);
+
+                                                return $prediction
+                                                    && $prediction->predicted_home_score !== null
+                                                    && $prediction->predicted_away_score !== null;
+                                            })->count();
+                                        @endphp
+
+                                        <div class="rounded-[2rem] border border-[#dfe5f3] bg-[#f8faff] p-5">
+                                            <div class="flex items-center justify-between">
+                                                <div class="rounded-2xl bg-[#1238ff] px-4 py-2 text-sm font-black text-white">
+                                                    Grupo {{ $groupLetter }}
+                                                </div>
+
+                                                <div class="rounded-full bg-white px-4 py-2 text-xs font-black text-[#6b7592] shadow-sm">
+                                                    {{ $groupDone }}/{{ $groupMatches->count() }} completos
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-5 grid gap-4">
+                                                @foreach($groupMatches as $match)
+                                                    @php
+                                                        $prediction = $predictions->get($match->id);
+                                                        $homeValue = old("predictions.{$match->id}.home", $prediction->predicted_home_score ?? '');
+                                                        $awayValue = old("predictions.{$match->id}.away", $prediction->predicted_away_score ?? '');
+                                                        $homeFlag = $flagUrl($match->homeTeam);
+                                                        $awayFlag = $flagUrl($match->awayTeam);
+                                                    @endphp
+
+                                                    <div class="rounded-[1.6rem] border border-[#e4eaf6] bg-white p-4 shadow-sm">
+                                                        <div class="mb-3 flex items-center justify-between">
+                                                            <p class="text-sm font-black text-[#66708b]">
+                                                                {{ $match->match_date ? Carbon::parse($match->match_date)->format('d/m/Y') : '--/--/----' }}
+                                                            </p>
+
+                                                            <span class="rounded-full bg-[#edf1ff] px-3 py-1 text-[11px] font-black uppercase tracking-[0.15em] text-[#1238ff]">
+                                                                Grupo {{ $groupLetter }}
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="grid items-center gap-4 md:grid-cols-[1fr_120px_1fr]">
+                                                            <div class="flex items-center gap-3">
+                                                                @if($homeFlag)
+                                                                    <img src="{{ $homeFlag }}" alt="{{ $match->homeTeam->name }}" class="h-11 w-14 rounded-xl object-cover ring-1 ring-black/5">
+                                                                @else
+                                                                    <div class="flex h-11 w-14 items-center justify-center rounded-xl bg-[#edf1ff] text-xs font-black text-[#1238ff]">
+                                                                        ---
+                                                                    </div>
+                                                                @endif
+
+                                                                <p class="text-sm font-black text-[#080f2f]">
+                                                                    {{ $match->homeTeam?->name ?? 'Equipo 1' }}
+                                                                </p>
+                                                            </div>
+
+                                                            <div class="flex items-center justify-center gap-2">
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    name="predictions[{{ $match->id }}][home]"
+                                                                    value="{{ $homeValue }}"
+                                                                    class="h-14 w-14 rounded-2xl border border-[#d7dfef] bg-white text-center text-xl font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15"
+                                                                >
+
+                                                                <span class="text-lg font-black text-[#9ba5bf]">-</span>
+
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    name="predictions[{{ $match->id }}][away]"
+                                                                    value="{{ $awayValue }}"
+                                                                    class="h-14 w-14 rounded-2xl border border-[#d7dfef] bg-white text-center text-xl font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15"
+                                                                >
+                                                            </div>
+
+                                                            <div class="flex items-center justify-end gap-3">
+                                                                <p class="text-right text-sm font-black text-[#080f2f]">
+                                                                    {{ $match->awayTeam?->name ?? 'Equipo 2' }}
+                                                                </p>
+
+                                                                @if($awayFlag)
+                                                                    <img src="{{ $awayFlag }}" alt="{{ $match->awayTeam->name }}" class="h-11 w-14 rounded-xl object-cover ring-1 ring-black/5">
+                                                                @else
+                                                                    <div class="flex h-11 w-14 items-center justify-center rounded-xl bg-[#edf1ff] text-xs font-black text-[#1238ff]">
+                                                                        ---
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
                                         </div>
-
-                                        <div class="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
-                                            <div class="rounded-2xl bg-white p-3 text-center">
-                                                <p class="mb-2 min-h-[38px] text-xs font-black text-[#080f2f]">
-                                                    {{ $match->homeTeam?->name ?? 'Pendiente' }}
-                                                </p>
-
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    name="bracket[{{ $match->id }}][home]"
-                                                    value="{{ $match->predicted_home_score !== null ? $match->predicted_home_score : '' }}"
-                                                    class="h-12 w-full rounded-2xl border border-[#080f2f]/10 bg-[#f4f6ff] text-center text-xl font-black text-[#080f2f] outline-none"
-                                                >
-                                            </div>
-
-                                            <div class="pt-12 text-center text-xs font-black text-[#080f2f]/35">
-                                                -
-                                            </div>
-
-                                            <div class="rounded-2xl bg-white p-3 text-center">
-                                                <p class="mb-2 min-h-[38px] text-xs font-black text-[#080f2f]">
-                                                    {{ $match->awayTeam?->name ?? 'Pendiente' }}
-                                                </p>
-
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    name="bracket[{{ $match->id }}][away]"
-                                                    value="{{ $match->predicted_away_score !== null ? $match->predicted_away_score : '' }}"
-                                                    class="h-12 w-full rounded-2xl border border-[#080f2f]/10 bg-[#f4f6ff] text-center text-xl font-black text-[#080f2f] outline-none"
-                                                >
-                                            </div>
-                                        </div>
-
-                                        @if($match->homeTeam && $match->awayTeam)
-                                            <div class="mt-4 rounded-2xl bg-white p-4">
-                                                <p class="mb-3 text-xs font-black text-[#080f2f]/45">
-                                                    Clasifica si hay empate
-                                                </p>
-
-                                                <label class="mb-2 flex items-center gap-2 text-xs font-black text-[#080f2f]">
-                                                    <input
-                                                        type="radio"
-                                                        name="bracket[{{ $match->id }}][winner]"
-                                                        value="{{ $match->home_team_id }}"
-                                                        @checked((int) $match->predicted_winner_team_id === (int) $match->home_team_id)
-                                                    >
-                                                    {{ $match->homeTeam->name }}
-                                                </label>
-
-                                                <label class="flex items-center gap-2 text-xs font-black text-[#080f2f]">
-                                                    <input
-                                                        type="radio"
-                                                        name="bracket[{{ $match->id }}][winner]"
-                                                        value="{{ $match->away_team_id }}"
-                                                        @checked((int) $match->predicted_winner_team_id === (int) $match->away_team_id)
-                                                    >
-                                                    {{ $match->awayTeam->name }}
-                                                </label>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
-                        @endif
+                        @endforeach
+
+                        <div class="mt-8 flex justify-end">
+                            <button
+                                type="submit"
+                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1]"
+                            >
+                                Guardar y actualizar
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
-        @endforeach
+
+            <div class="main-tab-panel" data-main-panel="tables">
+                <div class="rounded-[2rem] bg-white p-6 shadow-xl ring-1 ring-black/5">
+                    <h2 class="text-2xl font-black text-[#080f2f]">Tablas de grupos</h2>
+
+                    <div class="mt-6 grid gap-5 xl:grid-cols-3">
+                        @foreach(range('A', 'L') as $groupLetter)
+                            @php
+                                $groupRows = $standings->get($groupLetter, collect());
+                            @endphp
+
+                            <div class="overflow-hidden rounded-[1.8rem] border border-[#dfe5f3] bg-white shadow-sm">
+                                <div class="bg-[#1238ff] px-5 py-4 text-white">
+                                    <h3 class="text-lg font-black">Grupo {{ $groupLetter }}</h3>
+                                </div>
+
+                                <div class="p-4">
+                                    <div class="table-header standing-header mb-3">
+                                        <div>#</div>
+                                        <div></div>
+                                        <div>Equipo</div>
+                                        <div class="text-center">Pts</div>
+                                        <div class="text-center">DG</div>
+                                    </div>
+
+                                    @forelse($groupRows as $row)
+                                        @php
+                                            $teamFlag = $flagUrl($row->team);
+                                        @endphp
+
+                                        <div class="mb-2 grid grid-cols-[34px_28px_1fr_50px_50px] items-center gap-2 rounded-2xl bg-[#f8faff] px-2 py-3">
+                                            <div class="text-sm font-black text-[#080f2f]">
+                                                {{ $row->position }}
+                                            </div>
+
+                                            <div>
+                                                @if($teamFlag)
+                                                    <img src="{{ $teamFlag }}" class="h-5 w-7 rounded object-cover" alt="{{ $row->team?->name }}">
+                                                @endif
+                                            </div>
+
+                                            <div>
+                                                <p class="text-sm font-black text-[#080f2f]">
+                                                    {{ $row->team?->name ?? 'Pendiente' }}
+                                                </p>
+                                            </div>
+
+                                            <div class="text-center text-sm font-black text-[#080f2f]">
+                                                {{ $row->points }}
+                                            </div>
+
+                                            <div class="text-center text-sm font-black text-[#080f2f]">
+                                                {{ $row->goal_difference > 0 ? '+' . $row->goal_difference : $row->goal_difference }}
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="rounded-2xl bg-[#f8faff] px-4 py-5 text-sm font-bold text-[#7c86a3]">
+                                            Aún no hay datos calculados.
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-tab-panel" data-main-panel="thirds">
+                <div class="rounded-[2rem] bg-white p-6 shadow-xl ring-1 ring-black/5">
+                    <h2 class="text-2xl font-black text-[#080f2f]">Mejores terceros</h2>
+
+                    <div class="mt-6 overflow-hidden rounded-[1.8rem] border border-[#dfe5f3] bg-white">
+                        <div class="p-4">
+                            <div class="table-header thirds-header mb-3">
+                                <div>Pos</div>
+                                <div></div>
+                                <div>Equipo</div>
+                                <div class="text-center">Grupo</div>
+                                <div class="text-center">Pts</div>
+                                <div class="text-center">Estado</div>
+                            </div>
+
+                            <div class="divide-y divide-[#edf1f8]">
+                                @forelse($bestThirds as $index => $row)
+                                    @php
+                                        $teamFlag = $flagUrl($row->team);
+                                    @endphp
+
+                                    <div class="grid grid-cols-[60px_34px_1fr_80px_80px_130px] items-center gap-2 px-5 py-4">
+                                        <div class="text-sm font-black text-[#080f2f]">
+                                            {{ $index + 1 }}
+                                        </div>
+
+                                        <div>
+                                            @if($teamFlag)
+                                                <img src="{{ $teamFlag }}" class="h-5 w-7 rounded object-cover" alt="{{ $row->team?->name }}">
+                                            @endif
+                                        </div>
+
+                                        <p class="text-sm font-black text-[#080f2f]">
+                                            {{ $row->team?->name ?? 'Pendiente' }}
+                                        </p>
+
+                                        <div class="text-center text-sm font-black text-[#080f2f]">
+                                            {{ $row->group_name }}
+                                        </div>
+
+                                        <div class="text-center text-sm font-black text-[#080f2f]">
+                                            {{ $row->points }} pts
+                                        </div>
+
+                                        <div class="text-center">
+                                            @if($index < 8)
+                                                <span class="inline-flex rounded-full bg-[#159447]/10 px-3 py-2 text-xs font-black text-[#159447]">
+                                                    Clasifica
+                                                </span>
+                                            @else
+                                                <span class="inline-flex rounded-full bg-[#e51b2b]/10 px-3 py-2 text-xs font-black text-[#e51b2b]">
+                                                    Eliminado
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="px-5 py-6 text-sm font-bold text-[#7c86a3]">
+                                        Todavía no hay mejores terceros calculados.
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-tab-panel" data-main-panel="bracket">
+                <form method="POST" action="{{ route('predictions.store') }}">
+                    @csrf
+                    <input type="hidden" name="active_tab" value="bracket">
+
+                    <div class="rounded-[2rem] bg-white p-6 shadow-xl ring-1 ring-black/5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-[#080f2f]">Llave de eliminación</h2>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
+                                    Ingresá los marcadores de cada cruce y guardá la llave.
+                                </p>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="rounded-2xl bg-[#1238ff] px-5 py-3 text-sm font-black text-white"
+                            >
+                                Guardar llave
+                            </button>
+                        </div>
+
+                        <div class="mt-6">
+                            <div class="bracket-board">
+                                <div class="bracket-grid">
+                                    @foreach($roundColumns as $column)
+                                        <div>
+                                            <div class="bracket-stage-title">{{ $column['title'] }}</div>
+
+                                            <div class="bracket-column {{ $column['class'] }} {{ $column['side'] }}">
+                                                @foreach($column['slots'] as $slot)
+                                                    @php
+                                                        $matchModel = $getSlot($slot);
+                                                        $homeFlag = $flagUrl($matchModel?->homeTeam);
+                                                        $awayFlag = $flagUrl($matchModel?->awayTeam);
+                                                    @endphp
+
+                                                    <div class="bracket-match {{ $slot === 104 ? 'winner-card' : '' }} {{ $slot === 103 ? 'third-card' : '' }}">
+                                                        <div class="mb-2 flex items-center justify-between">
+                                                            <span class="bracket-code">M{{ $slot }}</span>
+
+                                                            @if($slot === 104)
+                                                                <span class="text-[8px] font-black uppercase tracking-[0.18em] text-[#ffc400]">Final</span>
+                                                            @elseif($slot === 103)
+                                                                <span class="text-[8px] font-black uppercase tracking-[0.18em] text-[#ffb14a]">3er lugar</span>
+                                                            @endif
+                                                        </div>
+
+                                                        <div>
+                                                            <div class="bracket-team-line">
+                                                                @if($homeFlag)
+                                                                    <img src="{{ $homeFlag }}" alt="">
+                                                                @else
+                                                                    <span></span>
+                                                                @endif
+
+                                                                <span class="bracket-team-name">
+                                                                    {{ $matchModel?->homeTeam?->name ?? 'Pendiente' }}
+                                                                </span>
+
+                                                                @if($matchModel)
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        name="bracket[{{ $matchModel->id }}][home]"
+                                                                        value="{{ old("bracket.{$matchModel->id}.home", $matchModel->predicted_home_score) }}"
+                                                                        class="bracket-score-input"
+                                                                    >
+                                                                @else
+                                                                    <input type="text" value="-" class="bracket-score-input" disabled>
+                                                                @endif
+                                                            </div>
+
+                                                            <div class="bracket-team-line">
+                                                                @if($awayFlag)
+                                                                    <img src="{{ $awayFlag }}" alt="">
+                                                                @else
+                                                                    <span></span>
+                                                                @endif
+
+                                                                <span class="bracket-team-name">
+                                                                    {{ $matchModel?->awayTeam?->name ?? 'Pendiente' }}
+                                                                </span>
+
+                                                                @if($matchModel)
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        name="bracket[{{ $matchModel->id }}][away]"
+                                                                        value="{{ old("bracket.{$matchModel->id}.away", $matchModel->predicted_away_score) }}"
+                                                                        class="bracket-score-input"
+                                                                    >
+                                                                @else
+                                                                    <input type="text" value="-" class="bracket-score-input" disabled>
+                                                                @endif
+                                                            </div>
+
+                                                            @if($matchModel && $matchModel->homeTeam && $matchModel->awayTeam)
+                                                                <select name="bracket[{{ $matchModel->id }}][winner]" class="bracket-winner-select">
+                                                                    <option value="">Desempate</option>
+
+                                                                    <option
+                                                                        value="{{ $matchModel->home_team_id }}"
+                                                                        @selected((int) old("bracket.{$matchModel->id}.winner", $matchModel->predicted_winner_team_id) === (int) $matchModel->home_team_id)
+                                                                    >
+                                                                        {{ $matchModel->homeTeam->name }}
+                                                                    </option>
+
+                                                                    <option
+                                                                        value="{{ $matchModel->away_team_id }}"
+                                                                        @selected((int) old("bracket.{$matchModel->id}.winner", $matchModel->predicted_winner_team_id) === (int) $matchModel->away_team_id)
+                                                                    >
+                                                                        {{ $matchModel->awayTeam->name }}
+                                                                    </option>
+                                                                </select>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex justify-end">
+                            <button
+                                type="submit"
+                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1]"
+                            >
+                                Guardar llave
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </section>
 
 <script>
-    function mostrarTab(tab) {
-        document.querySelectorAll('.tab-content').forEach(function (content) {
-            content.classList.add('hidden');
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentMainTab = @json($activeTab);
+
+        const mainButtons = document.querySelectorAll('[data-main-tab]');
+        const mainPanels = document.querySelectorAll('[data-main-panel]');
+
+        function activateMainTab(tabName) {
+            mainButtons.forEach((button) => {
+                button.classList.toggle('active', button.dataset.mainTab === tabName);
+            });
+
+            mainPanels.forEach((panel) => {
+                panel.classList.toggle('active', panel.dataset.mainPanel === tabName);
+            });
+        }
+
+        mainButtons.forEach((button) => {
+            button.addEventListener('click', function () {
+                activateMainTab(this.dataset.mainTab);
+            });
         });
 
-        document.querySelectorAll('.tab-btn').forEach(function (button) {
-            button.classList.remove('bg-[#1238ff]', 'text-white');
-            button.classList.add('bg-[#f4f6ff]', 'text-[#080f2f]');
+        activateMainTab(currentMainTab || 'groups');
+
+        const groupButtons = document.querySelectorAll('[data-group-tab]');
+        const groupPanels = document.querySelectorAll('[data-group-panel]');
+
+        function activateGroupTab(tabName) {
+            groupButtons.forEach((button) => {
+                button.classList.toggle('active', button.dataset.groupTab === tabName);
+            });
+
+            groupPanels.forEach((panel) => {
+                panel.classList.toggle('active', panel.dataset.groupPanel === tabName);
+            });
+        }
+
+        groupButtons.forEach((button) => {
+            button.addEventListener('click', function () {
+                activateGroupTab(this.dataset.groupTab);
+            });
         });
 
-        document.getElementById('tab-' + tab).classList.remove('hidden');
-
-        const activeButton = document.getElementById('btn-' + tab);
-
-        activeButton.classList.remove('bg-[#f4f6ff]', 'text-[#080f2f]');
-        activeButton.classList.add('bg-[#1238ff]', 'text-white');
-    }
+        activateGroupTab('set_1');
+    });
 </script>
 @endsection

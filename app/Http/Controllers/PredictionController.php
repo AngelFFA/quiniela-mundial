@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PredictionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $matches = MatchGame::with(['homeTeam', 'awayTeam'])
             ->where('stage', 'Grupos')
@@ -48,27 +48,33 @@ class PredictionController extends Controller
         ])
             ->where('user_id', Auth::id())
             ->orderBy('slot')
-            ->get()
-            ->groupBy('round');
+            ->get();
+
+        $activeTab = $request->get('tab', session('active_tab', 'groups'));
 
         return view('predictions.index', compact(
             'matches',
             'predictions',
             'standings',
             'bestThirds',
-            'bracketMatches'
+            'bracketMatches',
+            'activeTab'
         ));
     }
 
     public function store(Request $request, BracketSimulatorService $simulator)
     {
+        $activeTab = $request->input('active_tab', 'tables');
+
         if ($request->has('predictions')) {
-            foreach ($request->predictions as $matchId => $prediction) {
+            foreach ($request->input('predictions', []) as $matchId => $prediction) {
                 if (
                     !isset($prediction['home']) ||
                     !isset($prediction['away']) ||
                     $prediction['home'] === '' ||
-                    $prediction['away'] === ''
+                    $prediction['away'] === '' ||
+                    $prediction['home'] === null ||
+                    $prediction['away'] === null
                 ) {
                     continue;
                 }
@@ -79,13 +85,18 @@ class PredictionController extends Controller
                         'match_game_id' => $matchId,
                     ],
                     [
-                        'predicted_home_score' => $prediction['home'],
-                        'predicted_away_score' => $prediction['away'],
+                        'predicted_home_score' => (int) $prediction['home'],
+                        'predicted_away_score' => (int) $prediction['away'],
                     ]
                 );
             }
 
             $simulator->generateForUser(Auth::id());
+
+            return redirect()
+                ->route('predictions.index', ['tab' => $activeTab])
+                ->with('active_tab', $activeTab)
+                ->with('success', 'Pronósticos guardados y simulación actualizada.');
         }
 
         if ($request->has('bracket')) {
@@ -93,11 +104,16 @@ class PredictionController extends Controller
                 Auth::id(),
                 $request->input('bracket', [])
             );
+
+            return redirect()
+                ->route('predictions.index', ['tab' => 'bracket'])
+                ->with('active_tab', 'bracket')
+                ->with('success', 'Llave guardada y cruces actualizados.');
         }
 
         return redirect()
             ->route('predictions.index')
-            ->with('success', 'Quiniela guardada correctamente.');
+            ->with('error', 'No hay datos para guardar.');
     }
 
     public function publicList(Request $request)
