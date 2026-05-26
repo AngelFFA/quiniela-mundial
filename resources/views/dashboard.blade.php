@@ -2,13 +2,7 @@
 
 @section('content')
 <section class="relative min-h-[calc(100vh-92px)] px-6 py-14">
-    <div class="absolute -left-40 top-0 h-[560px] w-[560px] rounded-full bg-[#1238ff]"></div>
-    <div class="absolute -left-24 top-[250px] h-[430px] w-[430px] rounded-full bg-[#51c855]"></div>
-    <div class="absolute -left-6 top-[430px] h-[360px] w-[360px] rounded-full bg-[#8edcff]"></div>
 
-    <div class="absolute -right-20 top-10 h-[500px] w-[500px] rounded-full bg-[#e51b2b]"></div>
-    <div class="absolute right-[-110px] top-[360px] h-[450px] w-[450px] rounded-full bg-[#ff7a1a]"></div>
-    <div class="absolute right-16 bottom-4 h-[410px] w-[410px] rounded-full bg-[#ffc400]"></div>
 
     <div class="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-2">
         <div>

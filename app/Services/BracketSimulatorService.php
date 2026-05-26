@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\MatchGame;
+use App\Models\Prediction;
+use App\Models\Team;
 use App\Models\UserBracketMatch;
 use App\Models\UserGroupStanding;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +14,7 @@ class BracketSimulatorService
     public function generateForUser(int $userId): void
     {
         DB::transaction(function () use ($userId) {
+            $this->rebuildGroupStandings($userId);
             $this->deleteBracket($userId);
 
             $standings = UserGroupStanding::with('team')
@@ -27,15 +31,13 @@ class BracketSimulatorService
                 $positions[$row->group_name][$row->position] = $row;
             }
 
-            $bestThirds = $standings
+            $thirdRows = $standings
                 ->where('position', 3)
-                ->sortByDesc(function ($row) {
-                    return str_pad($row->points, 3, '0', STR_PAD_LEFT)
-                        . str_pad($row->goal_difference + 100, 3, '0', STR_PAD_LEFT)
-                        . str_pad($row->goals_for, 3, '0', STR_PAD_LEFT);
-                })
                 ->values()
-                ->take(8);
+                ->all();
+
+            $bestThirds = $this->rankBestThirds($thirdRows);
+            $bestThirds = array_slice($bestThirds, 0, 8);
 
             $thirdByGroup = [];
 
@@ -43,39 +45,53 @@ class BracketSimulatorService
                 $thirdByGroup[$third->group_name] = $third;
             }
 
-            $thirdGroups = array_keys($thirdByGroup);
+            UserGroupStanding::where('user_id', $userId)->update([
+                'qualified' => false,
+                'qualification_type' => null,
+            ]);
 
-            $thirdMap = $this->resolveThirdPlaceMap($thirdGroups);
+            UserGroupStanding::where('user_id', $userId)
+                ->whereIn('position', [1, 2])
+                ->update([
+                    'qualified' => true,
+                    'qualification_type' => 'directo',
+                ]);
+
+            UserGroupStanding::where('user_id', $userId)
+                ->whereIn('id', collect($bestThirds)->pluck('id')->filter()->values()->all())
+                ->update([
+                    'qualified' => true,
+                    'qualification_type' => 'mejor_tercero',
+                ]);
+
+            $thirdMap = $this->resolveThirdPlaceMap(array_keys($thirdByGroup));
 
             $roundOf32 = [
                 73 => ['2A', '2B'],
-                74 => ['1E', '3' . $thirdMap['1E']],
-                75 => ['1I', '3' . $thirdMap['1I']],
-                76 => ['1F', '2C'],
-                77 => ['2K', '2L'],
-                78 => ['1H', '2J'],
-                79 => ['1D', '3' . $thirdMap['1D']],
-                80 => ['1G', '3' . $thirdMap['1G']],
-                81 => ['1C', '2F'],
-                82 => ['2E', '2I'],
-                83 => ['1A', '3' . $thirdMap['1A']],
-                84 => ['1L', '3' . $thirdMap['1L']],
-                85 => ['1J', '2H'],
-                86 => ['2D', '2G'],
-                87 => ['1B', '3' . $thirdMap['1B']],
-                88 => ['1K', '3' . $thirdMap['1K']],
+                74 => ['1E', $this->thirdCode($thirdMap, '1E')],
+                75 => ['1F', '2C'],
+                76 => ['1C', '2F'],
+                77 => ['1I', $this->thirdCode($thirdMap, '1I')],
+                78 => ['2E', '2I'],
+                79 => ['1A', $this->thirdCode($thirdMap, '1A')],
+                80 => ['1L', $this->thirdCode($thirdMap, '1L')],
+                81 => ['1D', $this->thirdCode($thirdMap, '1D')],
+                82 => ['1G', $this->thirdCode($thirdMap, '1G')],
+                83 => ['2K', '2L'],
+                84 => ['1H', '2J'],
+                85 => ['1B', $this->thirdCode($thirdMap, '1B')],
+                86 => ['1J', '2H'],
+                87 => ['1K', $this->thirdCode($thirdMap, '1K')],
+                88 => ['2D', '2G'],
             ];
 
             foreach ($roundOf32 as $slot => $teams) {
-                $homeTeamId = $this->resolveTeamId($teams[0], $positions, $thirdByGroup);
-                $awayTeamId = $this->resolveTeamId($teams[1], $positions, $thirdByGroup);
-
                 UserBracketMatch::create([
                     'user_id' => $userId,
                     'round' => 'Dieciseisavos',
                     'slot' => $slot,
-                    'home_team_id' => $homeTeamId,
-                    'away_team_id' => $awayTeamId,
+                    'home_team_id' => $this->resolveTeamId($teams[0], $positions, $thirdByGroup),
+                    'away_team_id' => $this->resolveTeamId($teams[1], $positions, $thirdByGroup),
                     'predicted_home_score' => null,
                     'predicted_away_score' => null,
                     'predicted_winner_team_id' => null,
@@ -111,14 +127,18 @@ class BracketSimulatorService
 
                 if ($homeScore > $awayScore) {
                     $winnerId = $match->home_team_id;
-                }
-
-                if ($awayScore > $homeScore) {
+                } elseif ($awayScore > $homeScore) {
                     $winnerId = $match->away_team_id;
-                }
-
-                if ($homeScore === $awayScore) {
+                } else {
                     $winnerId = $winnerId ? (int) $winnerId : null;
+
+                    if (
+                        $winnerId !== null
+                        && (int) $winnerId !== (int) $match->home_team_id
+                        && (int) $winnerId !== (int) $match->away_team_id
+                    ) {
+                        $winnerId = null;
+                    }
                 }
 
                 $match->update([
@@ -130,6 +150,324 @@ class BracketSimulatorService
 
             $this->rebuildAdvancedRounds($userId);
         });
+    }
+
+    private function rebuildGroupStandings(int $userId): void
+    {
+        $matches = MatchGame::with(['homeTeam', 'awayTeam'])
+            ->where('stage', 'Grupos')
+            ->orderBy('group_name')
+            ->orderBy('match_date')
+            ->get();
+
+        $predictions = Prediction::where('user_id', $userId)
+            ->get()
+            ->keyBy('match_game_id');
+
+        UserGroupStanding::where('user_id', $userId)->delete();
+
+        foreach ($matches->groupBy('group_name') as $groupName => $groupMatches) {
+            $teamIds = [];
+
+            foreach ($groupMatches as $match) {
+                if ($match->home_team_id) {
+                    $teamIds[$match->home_team_id] = $match->home_team_id;
+                }
+
+                if ($match->away_team_id) {
+                    $teamIds[$match->away_team_id] = $match->away_team_id;
+                }
+            }
+
+            $stats = [];
+
+            foreach ($teamIds as $teamId) {
+                $stats[$teamId] = [
+                    'team_id' => $teamId,
+                    'played' => 0,
+                    'won' => 0,
+                    'drawn' => 0,
+                    'lost' => 0,
+                    'goals_for' => 0,
+                    'goals_against' => 0,
+                    'goal_difference' => 0,
+                    'points' => 0,
+                ];
+            }
+
+            foreach ($groupMatches as $match) {
+                $prediction = $predictions->get($match->id);
+
+                if (
+                    !$prediction
+                    || $prediction->predicted_home_score === null
+                    || $prediction->predicted_away_score === null
+                    || !$match->home_team_id
+                    || !$match->away_team_id
+                ) {
+                    continue;
+                }
+
+                $homeId = (int) $match->home_team_id;
+                $awayId = (int) $match->away_team_id;
+                $homeScore = (int) $prediction->predicted_home_score;
+                $awayScore = (int) $prediction->predicted_away_score;
+
+                $stats[$homeId]['played']++;
+                $stats[$awayId]['played']++;
+
+                $stats[$homeId]['goals_for'] += $homeScore;
+                $stats[$homeId]['goals_against'] += $awayScore;
+
+                $stats[$awayId]['goals_for'] += $awayScore;
+                $stats[$awayId]['goals_against'] += $homeScore;
+
+                if ($homeScore > $awayScore) {
+                    $stats[$homeId]['won']++;
+                    $stats[$homeId]['points'] += 3;
+                    $stats[$awayId]['lost']++;
+                } elseif ($awayScore > $homeScore) {
+                    $stats[$awayId]['won']++;
+                    $stats[$awayId]['points'] += 3;
+                    $stats[$homeId]['lost']++;
+                } else {
+                    $stats[$homeId]['drawn']++;
+                    $stats[$awayId]['drawn']++;
+                    $stats[$homeId]['points']++;
+                    $stats[$awayId]['points']++;
+                }
+            }
+
+            foreach ($stats as $teamId => $row) {
+                $stats[$teamId]['goal_difference'] = $row['goals_for'] - $row['goals_against'];
+            }
+
+            $orderedTeamIds = $this->rankGroupTeams(array_values($teamIds), $stats, $groupMatches, $predictions);
+
+            foreach ($orderedTeamIds as $index => $teamId) {
+                $row = $stats[$teamId];
+
+                UserGroupStanding::create([
+                    'user_id' => $userId,
+                    'team_id' => $teamId,
+                    'group_name' => $groupName,
+                    'played' => $row['played'],
+                    'won' => $row['won'],
+                    'drawn' => $row['drawn'],
+                    'lost' => $row['lost'],
+                    'goals_for' => $row['goals_for'],
+                    'goals_against' => $row['goals_against'],
+                    'goal_difference' => $row['goal_difference'],
+                    'points' => $row['points'],
+                    'position' => $index + 1,
+                    'qualified' => $index < 2,
+                    'qualification_type' => $index === 0 ? 'directo' : ($index === 1 ? 'directo' : null),
+                ]);
+            }
+        }
+    }
+
+    private function rankGroupTeams(array $teamIds, array $stats, $groupMatches, $predictions): array
+    {
+        $pointBuckets = [];
+
+        foreach ($teamIds as $teamId) {
+            $pointBuckets[$stats[$teamId]['points']][] = $teamId;
+        }
+
+        krsort($pointBuckets, SORT_NUMERIC);
+
+        $ordered = [];
+
+        foreach ($pointBuckets as $bucket) {
+            if (count($bucket) === 1) {
+                $ordered[] = $bucket[0];
+                continue;
+            }
+
+            $ordered = array_merge(
+                $ordered,
+                $this->resolveSamePointTie($bucket, $stats, $groupMatches, $predictions)
+            );
+        }
+
+        return $ordered;
+    }
+
+    private function resolveSamePointTie(array $teamIds, array $stats, $groupMatches, $predictions): array
+    {
+        $groups = [$teamIds];
+
+        foreach (['points', 'goal_difference', 'goals_for'] as $metric) {
+            $nextGroups = [];
+
+            foreach ($groups as $group) {
+                if (count($group) <= 1) {
+                    $nextGroups[] = $group;
+                    continue;
+                }
+
+                $h2hStats = $this->headToHeadStats($group, $groupMatches, $predictions);
+                $metricGroups = [];
+
+                foreach ($group as $teamId) {
+                    $metricGroups[$h2hStats[$teamId][$metric]][] = $teamId;
+                }
+
+                krsort($metricGroups, SORT_NUMERIC);
+
+                foreach ($metricGroups as $metricGroup) {
+                    $nextGroups[] = array_values($metricGroup);
+                }
+            }
+
+            $groups = $nextGroups;
+        }
+
+        $ordered = [];
+
+        foreach ($groups as $group) {
+            if (count($group) <= 1) {
+                $ordered = array_merge($ordered, $group);
+                continue;
+            }
+
+            $ordered = array_merge($ordered, $this->resolveOverallTie($group, $stats));
+        }
+
+        return $ordered;
+    }
+
+    private function headToHeadStats(array $teamIds, $groupMatches, $predictions): array
+    {
+        $teamIds = array_map('intval', $teamIds);
+        $allowed = array_flip($teamIds);
+        $stats = [];
+
+        foreach ($teamIds as $teamId) {
+            $stats[$teamId] = [
+                'points' => 0,
+                'goal_difference' => 0,
+                'goals_for' => 0,
+                'goals_against' => 0,
+            ];
+        }
+
+        foreach ($groupMatches as $match) {
+            $homeId = (int) $match->home_team_id;
+            $awayId = (int) $match->away_team_id;
+
+            if (!isset($allowed[$homeId]) || !isset($allowed[$awayId])) {
+                continue;
+            }
+
+            $prediction = $predictions->get($match->id);
+
+            if (
+                !$prediction
+                || $prediction->predicted_home_score === null
+                || $prediction->predicted_away_score === null
+            ) {
+                continue;
+            }
+
+            $homeScore = (int) $prediction->predicted_home_score;
+            $awayScore = (int) $prediction->predicted_away_score;
+
+            $stats[$homeId]['goals_for'] += $homeScore;
+            $stats[$homeId]['goals_against'] += $awayScore;
+            $stats[$homeId]['goal_difference'] += $homeScore - $awayScore;
+
+            $stats[$awayId]['goals_for'] += $awayScore;
+            $stats[$awayId]['goals_against'] += $homeScore;
+            $stats[$awayId]['goal_difference'] += $awayScore - $homeScore;
+
+            if ($homeScore > $awayScore) {
+                $stats[$homeId]['points'] += 3;
+            } elseif ($awayScore > $homeScore) {
+                $stats[$awayId]['points'] += 3;
+            } else {
+                $stats[$homeId]['points']++;
+                $stats[$awayId]['points']++;
+            }
+        }
+
+        return $stats;
+    }
+
+    private function resolveOverallTie(array $teamIds, array $stats): array
+    {
+        usort($teamIds, function ($teamA, $teamB) use ($stats) {
+            return [
+                -$stats[$teamA]['goal_difference'],
+                -$stats[$teamA]['goals_for'],
+                -$this->teamConductScore($teamA),
+                $this->teamFifaRanking($teamA),
+                $teamA,
+            ] <=> [
+                -$stats[$teamB]['goal_difference'],
+                -$stats[$teamB]['goals_for'],
+                -$this->teamConductScore($teamB),
+                $this->teamFifaRanking($teamB),
+                $teamB,
+            ];
+        });
+
+        return $teamIds;
+    }
+
+    private function rankBestThirds(array $thirdRows): array
+    {
+        usort($thirdRows, function ($rowA, $rowB) {
+            return [
+                -$rowA->points,
+                -$rowA->goal_difference,
+                -$rowA->goals_for,
+                -$this->teamConductScore($rowA->team_id),
+                $this->teamFifaRanking($rowA->team_id),
+                $rowA->team_id,
+            ] <=> [
+                -$rowB->points,
+                -$rowB->goal_difference,
+                -$rowB->goals_for,
+                -$this->teamConductScore($rowB->team_id),
+                $this->teamFifaRanking($rowB->team_id),
+                $rowB->team_id,
+            ];
+        });
+
+        return $thirdRows;
+    }
+
+    private function teamConductScore(int $teamId): int
+    {
+        $team = Team::find($teamId);
+
+        if (!$team) {
+            return 0;
+        }
+
+        return (int) (
+            $team->team_conduct_score
+            ?? $team->fair_play_score
+            ?? $team->fair_play_points
+            ?? 0
+        );
+    }
+
+    private function teamFifaRanking(int $teamId): int
+    {
+        $team = Team::find($teamId);
+
+        if (!$team) {
+            return 999999;
+        }
+
+        return (int) (
+            $team->fifa_ranking
+            ?? $team->ranking
+            ?? (999000 + $teamId)
+        );
     }
 
     private function rebuildAdvancedRounds(int $userId): void
@@ -275,8 +613,8 @@ class BracketSimulatorService
             }
 
             if (
-                $prediction['predicted_home_score'] === null ||
-                $prediction['predicted_away_score'] === null
+                $prediction['predicted_home_score'] === null
+                || $prediction['predicted_away_score'] === null
             ) {
                 continue;
             }
@@ -291,17 +629,20 @@ class BracketSimulatorService
                 $winnerId = $match->away_team_id;
             }
 
+            if (
+                $winnerId !== null
+                && (int) $winnerId !== (int) $match->home_team_id
+                && (int) $winnerId !== (int) $match->away_team_id
+            ) {
+                $winnerId = null;
+            }
+
             $match->update([
                 'predicted_home_score' => $prediction['predicted_home_score'],
                 'predicted_away_score' => $prediction['predicted_away_score'],
                 'predicted_winner_team_id' => $winnerId,
             ]);
         }
-    }
-
-    private function winnerTeamId(?UserBracketMatch $match): ?int
-    {
-        return $match?->predicted_winner_team_id;
     }
 
     private function loserTeamId(?UserBracketMatch $match): ?int
@@ -321,8 +662,21 @@ class BracketSimulatorService
         return null;
     }
 
-    private function resolveTeamId(string $code, array $positions, array $thirdByGroup): ?int
+    private function thirdCode(array $thirdMap, string $winnerGroupCode): ?string
     {
+        if (!isset($thirdMap[$winnerGroupCode])) {
+            return null;
+        }
+
+        return '3' . $thirdMap[$winnerGroupCode];
+    }
+
+    private function resolveTeamId(?string $code, array $positions, array $thirdByGroup): ?int
+    {
+        if (!$code || strlen($code) < 2) {
+            return null;
+        }
+
         $position = (int) substr($code, 0, 1);
         $group = substr($code, 1, 1);
 
@@ -335,18 +689,64 @@ class BracketSimulatorService
 
     private function resolveThirdPlaceMap(array $thirdGroups): array
     {
-        $available = collect($thirdGroups)->values();
+        $thirdGroups = array_values(array_unique(array_filter($thirdGroups)));
+        sort($thirdGroups);
 
-        return [
-            '1A' => $available->contains('C') ? 'C' : ($available->contains('D') ? 'D' : ($available->contains('E') ? 'E' : $available->first())),
-            '1B' => $available->contains('E') ? 'E' : ($available->contains('F') ? 'F' : ($available->contains('G') ? 'G' : $available->first())),
-            '1D' => $available->contains('A') ? 'A' : ($available->contains('B') ? 'B' : ($available->contains('C') ? 'C' : $available->first())),
-            '1E' => $available->contains('D') ? 'D' : ($available->contains('C') ? 'C' : ($available->contains('B') ? 'B' : $available->first())),
-            '1F' => $available->contains('C') ? 'C' : ($available->contains('E') ? 'E' : ($available->contains('H') ? 'H' : $available->first())),
-            '1G' => $available->contains('E') ? 'E' : ($available->contains('F') ? 'F' : ($available->contains('I') ? 'I' : $available->first())),
-            '1I' => $available->contains('F') ? 'F' : ($available->contains('G') ? 'G' : ($available->contains('H') ? 'H' : $available->first())),
-            '1L' => $available->contains('I') ? 'I' : ($available->contains('J') ? 'J' : ($available->contains('K') ? 'K' : $available->first())),
+        if (count($thirdGroups) < 8) {
+            return [];
+        }
+
+        $rules = [
+            '1A' => ['C', 'E', 'F', 'H', 'I'],
+            '1B' => ['E', 'F', 'G', 'I', 'J'],
+            '1D' => ['B', 'E', 'F', 'I', 'J'],
+            '1E' => ['A', 'B', 'C', 'D', 'F'],
+            '1G' => ['A', 'E', 'H', 'I', 'J'],
+            '1I' => ['C', 'D', 'F', 'G', 'H'],
+            '1K' => ['D', 'E', 'I', 'J', 'L'],
+            '1L' => ['E', 'H', 'I', 'J', 'K'],
         ];
+
+        $slots = array_keys($rules);
+
+        usort($slots, function ($slotA, $slotB) use ($rules, $thirdGroups) {
+            $countA = count(array_values(array_intersect($rules[$slotA], $thirdGroups)));
+            $countB = count(array_values(array_intersect($rules[$slotB], $thirdGroups)));
+
+            return $countA <=> $countB;
+        });
+
+        return $this->assignThirds($slots, $rules, $thirdGroups, [], []);
+    }
+
+    private function assignThirds(array $slots, array $rules, array $thirdGroups, array $assigned, array $used): array
+    {
+        if (empty($slots)) {
+            return $assigned;
+        }
+
+        $slot = array_shift($slots);
+        $candidates = array_values(array_intersect($rules[$slot], $thirdGroups));
+
+        foreach ($candidates as $group) {
+            if (in_array($group, $used, true)) {
+                continue;
+            }
+
+            $nextAssigned = $assigned;
+            $nextAssigned[$slot] = $group;
+
+            $nextUsed = $used;
+            $nextUsed[] = $group;
+
+            $result = $this->assignThirds($slots, $rules, $thirdGroups, $nextAssigned, $nextUsed);
+
+            if (count($result) === 8) {
+                return $result;
+            }
+        }
+
+        return [];
     }
 
     private function deleteBracket(int $userId): void

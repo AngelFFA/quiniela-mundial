@@ -135,11 +135,38 @@ class PredictionController extends Controller
             ->get()
             ->keyBy('match_game_id');
 
+        $standings = UserGroupStanding::with('team')
+            ->where('user_id', $selectedUser->id)
+            ->orderBy('group_name')
+            ->orderBy('position')
+            ->get()
+            ->groupBy('group_name');
+
+        $bestThirds = UserGroupStanding::with('team')
+            ->where('user_id', $selectedUser->id)
+            ->where('position', 3)
+            ->orderByDesc('points')
+            ->orderByDesc('goal_difference')
+            ->orderByDesc('goals_for')
+            ->get();
+
+        $bracketMatches = UserBracketMatch::with([
+            'homeTeam',
+            'awayTeam',
+            'predictedWinnerTeam',
+        ])
+            ->where('user_id', $selectedUser->id)
+            ->orderBy('slot')
+            ->get();
+
         return view('predictions.public', compact(
             'users',
             'selectedUser',
             'matches',
-            'predictions'
+            'predictions',
+            'standings',
+            'bestThirds',
+            'bracketMatches'
         ));
     }
 }
