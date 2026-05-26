@@ -2,10 +2,6 @@
 
 @section('content')
 <section class="relative px-6 py-12">
-    <div class="absolute -left-32 top-20 h-[420px] w-[420px] rounded-full bg-[#1238ff]"></div>
-    <div class="absolute -right-16 top-16 h-[430px] w-[430px] rounded-full bg-[#e51b2b]"></div>
-    <div class="absolute right-[-100px] top-[360px] h-[420px] w-[420px] rounded-full bg-[#ffc400]"></div>
-
     <div class="relative mx-auto max-w-7xl">
         <div class="grid gap-8 lg:grid-cols-[1fr_360px]">
             <div>
