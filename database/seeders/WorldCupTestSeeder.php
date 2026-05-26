@@ -31,12 +31,12 @@ class WorldCupTestSeeder extends Seeder
                 ['name' => 'México', 'code' => 'MEX', 'flag' => 'mx'],
                 ['name' => 'Sudáfrica', 'code' => 'RSA', 'flag' => 'za'],
                 ['name' => 'Corea del Sur', 'code' => 'KOR', 'flag' => 'kr'],
-                ['name' => 'Turquía', 'code' => 'TUR', 'flag' => 'tr'],
+                ['name' => 'Czechia', 'code' => 'CZE', 'flag' => 'cz'],
             ],
             'B' => [
                 ['name' => 'Canadá', 'code' => 'CAN', 'flag' => 'ca'],
-                ['name' => 'Qatar', 'code' => 'QAT', 'flag' => 'qa'],
                 ['name' => 'Bosnia y Herzegovina', 'code' => 'BIH', 'flag' => 'ba'],
+                ['name' => 'Qatar', 'code' => 'QAT', 'flag' => 'qa'],
                 ['name' => 'Suiza', 'code' => 'SUI', 'flag' => 'ch'],
             ],
             'C' => [
@@ -49,7 +49,7 @@ class WorldCupTestSeeder extends Seeder
                 ['name' => 'Estados Unidos', 'code' => 'USA', 'flag' => 'us'],
                 ['name' => 'Paraguay', 'code' => 'PAR', 'flag' => 'py'],
                 ['name' => 'Australia', 'code' => 'AUS', 'flag' => 'au'],
-                ['name' => 'Italia', 'code' => 'ITA', 'flag' => 'it'],
+                ['name' => 'Türkiye', 'code' => 'TUR', 'flag' => 'tr'],
             ],
             'E' => [
                 ['name' => 'Alemania', 'code' => 'GER', 'flag' => 'de'],
@@ -113,27 +113,105 @@ class WorldCupTestSeeder extends Seeder
             }
         }
 
-        foreach ($groups as $groupName => $teamsGroup) {
-            $teams = Team::where('group_name', $groupName)->get()->values();
+        $fixtures = [
+            ['A', 'MEX', 'RSA', '2026-06-11 19:00:00'],
+            ['A', 'KOR', 'CZE', '2026-06-11 22:00:00'],
+            ['A', 'CZE', 'RSA', '2026-06-18 16:00:00'],
+            ['A', 'MEX', 'KOR', '2026-06-18 19:00:00'],
+            ['A', 'CZE', 'MEX', '2026-06-24 20:00:00'],
+            ['A', 'RSA', 'KOR', '2026-06-24 20:00:00'],
 
-            $pairings = [
-                [0, 1],
-                [2, 3],
-                [0, 2],
-                [3, 1],
-                [3, 0],
-                [1, 2],
-            ];
+            ['B', 'CAN', 'BIH', '2026-06-12 15:00:00'],
+            ['B', 'QAT', 'SUI', '2026-06-13 15:00:00'],
+            ['B', 'SUI', 'BIH', '2026-06-18 15:00:00'],
+            ['B', 'CAN', 'QAT', '2026-06-18 18:00:00'],
+            ['B', 'BIH', 'QAT', '2026-06-24 18:00:00'],
+            ['B', 'SUI', 'CAN', '2026-06-24 18:00:00'],
 
-            foreach ($pairings as $index => $pairing) {
-                MatchGame::create([
-                    'home_team_id' => $teams[$pairing[0]]->id,
-                    'away_team_id' => $teams[$pairing[1]]->id,
-                    'match_date' => now()->addDays((ord($groupName) - 64) * 3 + $index),
-                    'stage' => 'Grupos',
-                    'group_name' => $groupName,
-                ]);
-            }
+            ['C', 'BRA', 'MAR', '2026-06-13 18:00:00'],
+            ['C', 'HAI', 'SCO', '2026-06-14 15:00:00'],
+            ['C', 'BRA', 'HAI', '2026-06-19 18:00:00'],
+            ['C', 'SCO', 'MAR', '2026-06-20 15:00:00'],
+            ['C', 'SCO', 'BRA', '2026-06-26 18:00:00'],
+            ['C', 'MAR', 'HAI', '2026-06-26 18:00:00'],
+
+            ['D', 'USA', 'PAR', '2026-06-12 18:00:00'],
+            ['D', 'AUS', 'TUR', '2026-06-13 18:00:00'],
+            ['D', 'TUR', 'PAR', '2026-06-19 18:00:00'],
+            ['D', 'USA', 'AUS', '2026-06-19 21:00:00'],
+            ['D', 'TUR', 'USA', '2026-06-25 20:00:00'],
+            ['D', 'PAR', 'AUS', '2026-06-25 20:00:00'],
+
+            ['E', 'GER', 'CUW', '2026-06-14 18:00:00'],
+            ['E', 'CIV', 'ECU', '2026-06-15 15:00:00'],
+            ['E', 'GER', 'CIV', '2026-06-20 18:00:00'],
+            ['E', 'ECU', 'CUW', '2026-06-21 15:00:00'],
+            ['E', 'ECU', 'GER', '2026-06-27 18:00:00'],
+            ['E', 'CUW', 'CIV', '2026-06-27 18:00:00'],
+
+            ['F', 'NED', 'JPN', '2026-06-14 21:00:00'],
+            ['F', 'SWE', 'TUN', '2026-06-14 18:00:00'],
+            ['F', 'NED', 'SWE', '2026-06-20 18:00:00'],
+            ['F', 'TUN', 'JPN', '2026-06-20 21:00:00'],
+            ['F', 'JPN', 'SWE', '2026-06-25 18:00:00'],
+            ['F', 'TUN', 'NED', '2026-06-25 18:00:00'],
+
+            ['G', 'BEL', 'EGY', '2026-06-15 18:00:00'],
+            ['G', 'IRN', 'NZL', '2026-06-16 15:00:00'],
+            ['G', 'BEL', 'IRN', '2026-06-21 18:00:00'],
+            ['G', 'NZL', 'EGY', '2026-06-22 15:00:00'],
+            ['G', 'NZL', 'BEL', '2026-06-28 18:00:00'],
+            ['G', 'EGY', 'IRN', '2026-06-28 18:00:00'],
+
+            ['H', 'ESP', 'CPV', '2026-06-15 21:00:00'],
+            ['H', 'KSA', 'URU', '2026-06-16 18:00:00'],
+            ['H', 'ESP', 'KSA', '2026-06-21 21:00:00'],
+            ['H', 'URU', 'CPV', '2026-06-22 18:00:00'],
+            ['H', 'URU', 'ESP', '2026-06-28 21:00:00'],
+            ['H', 'CPV', 'KSA', '2026-06-28 21:00:00'],
+
+            ['I', 'FRA', 'SEN', '2026-06-16 21:00:00'],
+            ['I', 'IRQ', 'NOR', '2026-06-16 18:00:00'],
+            ['I', 'FRA', 'IRQ', '2026-06-22 18:00:00'],
+            ['I', 'NOR', 'SEN', '2026-06-22 21:00:00'],
+            ['I', 'SEN', 'IRQ', '2026-06-26 18:00:00'],
+            ['I', 'NOR', 'FRA', '2026-06-26 18:00:00'],
+
+            ['J', 'ARG', 'ALG', '2026-06-17 15:00:00'],
+            ['J', 'AUT', 'JOR', '2026-06-17 18:00:00'],
+            ['J', 'ARG', 'AUT', '2026-06-23 15:00:00'],
+            ['J', 'JOR', 'ALG', '2026-06-23 18:00:00'],
+            ['J', 'JOR', 'ARG', '2026-06-27 21:00:00'],
+            ['J', 'ALG', 'AUT', '2026-06-27 21:00:00'],
+
+            ['K', 'POR', 'COD', '2026-06-17 18:00:00'],
+            ['K', 'UZB', 'COL', '2026-06-17 21:00:00'],
+            ['K', 'COL', 'COD', '2026-06-23 18:00:00'],
+            ['K', 'POR', 'UZB', '2026-06-23 21:00:00'],
+            ['K', 'COD', 'UZB', '2026-06-27 18:00:00'],
+            ['K', 'COL', 'POR', '2026-06-27 18:00:00'],
+
+            ['L', 'ENG', 'CRO', '2026-06-17 20:00:00'],
+            ['L', 'GHA', 'PAN', '2026-06-17 23:00:00'],
+            ['L', 'ENG', 'GHA', '2026-06-23 20:00:00'],
+            ['L', 'PAN', 'CRO', '2026-06-23 23:00:00'],
+            ['L', 'PAN', 'ENG', '2026-06-27 20:00:00'],
+            ['L', 'CRO', 'GHA', '2026-06-27 20:00:00'],
+        ];
+
+        foreach ($fixtures as $fixture) {
+            [$groupName, $homeCode, $awayCode, $matchDate] = $fixture;
+
+            $homeTeam = Team::where('code', $homeCode)->firstOrFail();
+            $awayTeam = Team::where('code', $awayCode)->firstOrFail();
+
+            MatchGame::create([
+                'home_team_id' => $homeTeam->id,
+                'away_team_id' => $awayTeam->id,
+                'match_date' => $matchDate,
+                'stage' => 'Grupos',
+                'group_name' => $groupName,
+            ]);
         }
     }
 }
