@@ -575,61 +575,61 @@
                                                         $awayFlag = $flagUrl($match->awayTeam);
                                                     @endphp
 
-                                                    <div class="rounded-[1.6rem] border border-[#e4eaf6] bg-white p-4 shadow-sm">
-                                                        <div class="mb-3 flex items-center justify-between">
+                                                    <div class="rounded-[1.6rem] border border-[#e4eaf6] bg-white p-3 shadow-sm sm:p-4">
+                                                        <div class="mb-3 flex items-center justify-between gap-2">
                                                             <p class="text-sm font-black text-[#66708b]">
                                                                 {{ $match->match_date ? Carbon::parse($match->match_date)->format('d/m/Y') : '--/--/----' }}
                                                             </p>
 
-                                                            <span class="rounded-full bg-[#edf1ff] px-3 py-1 text-[11px] font-black uppercase tracking-[0.15em] text-[#1238ff]">
+                                                            <span class="shrink-0 rounded-full bg-[#edf1ff] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#1238ff] sm:text-[11px]">
                                                                 Grupo {{ $groupLetter }}
                                                             </span>
                                                         </div>
 
-                                                        <div class="grid items-center gap-4 md:grid-cols-[1fr_120px_1fr]">
-                                                            <div class="flex items-center gap-3">
+                                                        <div class="grid grid-cols-[minmax(0,1fr)_92px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)] sm:gap-4">
+                                                            <div class="flex min-w-0 items-center gap-2 sm:gap-3">
                                                                 @if($homeFlag)
-                                                                    <img src="{{ $homeFlag }}" alt="{{ $match->homeTeam->name }}" class="h-11 w-14 rounded-xl object-cover ring-1 ring-black/5">
+                                                                    <img src="{{ $homeFlag }}" alt="{{ $match->homeTeam->name }}" class="h-8 w-10 shrink-0 rounded-lg object-cover ring-1 ring-black/5 sm:h-11 sm:w-14 sm:rounded-xl">
                                                                 @else
-                                                                    <div class="flex h-11 w-14 items-center justify-center rounded-xl bg-[#edf1ff] text-xs font-black text-[#1238ff]">
+                                                                    <div class="flex h-8 w-10 shrink-0 items-center justify-center rounded-lg bg-[#edf1ff] text-[10px] font-black text-[#1238ff] sm:h-11 sm:w-14 sm:rounded-xl sm:text-xs">
                                                                         ---
                                                                     </div>
                                                                 @endif
 
-                                                                <p class="text-sm font-black text-[#080f2f]">
+                                                                <p class="min-w-0 truncate text-[11px] font-black leading-tight text-[#080f2f] sm:text-sm">
                                                                     {{ $match->homeTeam?->name ?? 'Equipo 1' }}
                                                                 </p>
                                                             </div>
 
-                                                            <div class="flex items-center justify-center gap-2">
+                                                            <div class="flex items-center justify-center gap-1 sm:gap-2">
                                                                 <input
                                                                     type="number"
                                                                     min="0"
                                                                     name="predictions[{{ $match->id }}][home]"
                                                                     value="{{ $homeValue }}"
-                                                                    class="h-14 w-14 rounded-2xl border border-[#d7dfef] bg-white text-center text-xl font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15"
+                                                                    class="h-11 w-10 rounded-xl border border-[#d7dfef] bg-white text-center text-base font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
                                                                 >
 
-                                                                <span class="text-lg font-black text-[#9ba5bf]">-</span>
+                                                                <span class="text-sm font-black text-[#9ba5bf] sm:text-lg">-</span>
 
                                                                 <input
                                                                     type="number"
                                                                     min="0"
                                                                     name="predictions[{{ $match->id }}][away]"
                                                                     value="{{ $awayValue }}"
-                                                                    class="h-14 w-14 rounded-2xl border border-[#d7dfef] bg-white text-center text-xl font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15"
+                                                                    class="h-11 w-10 rounded-xl border border-[#d7dfef] bg-white text-center text-base font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
                                                                 >
                                                             </div>
 
-                                                            <div class="flex items-center justify-end gap-3">
-                                                                <p class="text-right text-sm font-black text-[#080f2f]">
+                                                            <div class="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
+                                                                <p class="min-w-0 truncate text-right text-[11px] font-black leading-tight text-[#080f2f] sm:text-sm">
                                                                     {{ $match->awayTeam?->name ?? 'Equipo 2' }}
                                                                 </p>
 
                                                                 @if($awayFlag)
-                                                                    <img src="{{ $awayFlag }}" alt="{{ $match->awayTeam->name }}" class="h-11 w-14 rounded-xl object-cover ring-1 ring-black/5">
+                                                                    <img src="{{ $awayFlag }}" alt="{{ $match->awayTeam->name }}" class="h-8 w-10 shrink-0 rounded-lg object-cover ring-1 ring-black/5 sm:h-11 sm:w-14 sm:rounded-xl">
                                                                 @else
-                                                                    <div class="flex h-11 w-14 items-center justify-center rounded-xl bg-[#edf1ff] text-xs font-black text-[#1238ff]">
+                                                                    <div class="flex h-8 w-10 shrink-0 items-center justify-center rounded-lg bg-[#edf1ff] text-[10px] font-black text-[#1238ff] sm:h-11 sm:w-14 sm:rounded-xl sm:text-xs">
                                                                         ---
                                                                     </div>
                                                                 @endif
