@@ -586,18 +586,19 @@
                                                             </span>
                                                         </div>
 
-                                                        <div class="grid grid-cols-[minmax(0,1fr)_92px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)] sm:gap-4">
-                                                            <div class="flex min-w-0 items-center gap-2 sm:gap-3">
+                                                        <div class="grid grid-cols-[64px_104px_64px] items-center justify-center gap-2 sm:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)] sm:gap-4">
+                                                            <div class="flex min-w-0 flex-col items-center justify-center gap-1 text-center sm:flex-row sm:justify-start sm:gap-3 sm:text-left">
                                                                 @if($homeFlag)
-                                                                    <img src="{{ $homeFlag }}" alt="{{ $match->homeTeam->name }}" class="h-8 w-10 shrink-0 rounded-lg object-cover ring-1 ring-black/5 sm:h-11 sm:w-14 sm:rounded-xl">
+                                                                    <img src="{{ $homeFlag }}" alt="{{ $match->homeTeam->name }}" class="h-8 w-11 shrink-0 rounded-lg object-cover ring-1 ring-black/5 sm:h-11 sm:w-14 sm:rounded-xl">
                                                                 @else
-                                                                    <div class="flex h-8 w-10 shrink-0 items-center justify-center rounded-lg bg-[#edf1ff] text-[10px] font-black text-[#1238ff] sm:h-11 sm:w-14 sm:rounded-xl sm:text-xs">
+                                                                    <div class="flex h-8 w-11 shrink-0 items-center justify-center rounded-lg bg-[#edf1ff] text-[10px] font-black text-[#1238ff] sm:h-11 sm:w-14 sm:rounded-xl sm:text-xs">
                                                                         ---
                                                                     </div>
                                                                 @endif
 
-                                                                <p class="min-w-0 truncate text-[11px] font-black leading-tight text-[#080f2f] sm:text-sm">
-                                                                    {{ $match->homeTeam?->name ?? 'Equipo 1' }}
+                                                                <p class="w-full min-w-0 text-center text-[11px] font-black leading-tight text-[#080f2f] sm:text-left sm:text-sm">
+                                                                    <span class="block sm:hidden">{{ $match->homeTeam?->short_name ?? $match->homeTeam?->code ?? 'EQ1' }}</span>
+                                                                    <span class="hidden truncate sm:block">{{ $match->homeTeam?->name ?? 'Equipo 1' }}</span>
                                                                 </p>
                                                             </div>
 
@@ -607,7 +608,7 @@
                                                                     min="0"
                                                                     name="predictions[{{ $match->id }}][home]"
                                                                     value="{{ $homeValue }}"
-                                                                    class="h-11 w-10 rounded-xl border border-[#d7dfef] bg-white text-center text-base font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
+                                                                    class="h-12 w-11 rounded-xl border border-[#d7dfef] bg-white text-center text-lg font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
                                                                 >
 
                                                                 <span class="text-sm font-black text-[#9ba5bf] sm:text-lg">-</span>
@@ -617,19 +618,20 @@
                                                                     min="0"
                                                                     name="predictions[{{ $match->id }}][away]"
                                                                     value="{{ $awayValue }}"
-                                                                    class="h-11 w-10 rounded-xl border border-[#d7dfef] bg-white text-center text-base font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
+                                                                    class="h-12 w-11 rounded-xl border border-[#d7dfef] bg-white text-center text-lg font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
                                                                 >
                                                             </div>
 
-                                                            <div class="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
-                                                                <p class="min-w-0 truncate text-right text-[11px] font-black leading-tight text-[#080f2f] sm:text-sm">
-                                                                    {{ $match->awayTeam?->name ?? 'Equipo 2' }}
+                                                            <div class="flex min-w-0 flex-col-reverse items-center justify-center gap-1 text-center sm:flex-row sm:justify-end sm:gap-3 sm:text-right">
+                                                                <p class="w-full min-w-0 text-center text-[11px] font-black leading-tight text-[#080f2f] sm:text-right sm:text-sm">
+                                                                    <span class="block sm:hidden">{{ $match->awayTeam?->short_name ?? $match->awayTeam?->code ?? 'EQ2' }}</span>
+                                                                    <span class="hidden truncate sm:block">{{ $match->awayTeam?->name ?? 'Equipo 2' }}</span>
                                                                 </p>
 
                                                                 @if($awayFlag)
-                                                                    <img src="{{ $awayFlag }}" alt="{{ $match->awayTeam->name }}" class="h-8 w-10 shrink-0 rounded-lg object-cover ring-1 ring-black/5 sm:h-11 sm:w-14 sm:rounded-xl">
+                                                                    <img src="{{ $awayFlag }}" alt="{{ $match->awayTeam->name }}" class="h-8 w-11 shrink-0 rounded-lg object-cover ring-1 ring-black/5 sm:h-11 sm:w-14 sm:rounded-xl">
                                                                 @else
-                                                                    <div class="flex h-8 w-10 shrink-0 items-center justify-center rounded-lg bg-[#edf1ff] text-[10px] font-black text-[#1238ff] sm:h-11 sm:w-14 sm:rounded-xl sm:text-xs">
+                                                                    <div class="flex h-8 w-11 shrink-0 items-center justify-center rounded-lg bg-[#edf1ff] text-[10px] font-black text-[#1238ff] sm:h-11 sm:w-14 sm:rounded-xl sm:text-xs">
                                                                         ---
                                                                     </div>
                                                                 @endif
