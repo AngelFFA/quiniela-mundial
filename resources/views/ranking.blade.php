@@ -14,7 +14,7 @@
                 </h1>
 
                 <p class="mt-4 max-w-3xl text-base font-medium leading-8 text-[#080f2f]/65 md:text-lg">
-                    Posiciones generales de todos los participantes de la quiniela. Podés presionar el nombre de un participante para ver el detalle de sus puntos.
+                    Posiciones generales de todos los participantes de la quiniela. El detalle estará disponible únicamente para participantes con quiniela finalizada.
                 </p>
             </div>
 
@@ -33,6 +33,18 @@
             </div>
         </div>
 
+        @if(session('success'))
+            <div class="mt-6 rounded-3xl border border-[#159447]/20 bg-[#159447]/10 px-5 py-4 text-sm font-bold text-[#0c6f32]">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="mt-6 rounded-3xl border border-[#e51b2b]/20 bg-[#e51b2b]/10 px-5 py-4 text-sm font-bold text-[#b61522]">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="mt-10 overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5">
             <div class="overflow-x-auto">
                 <table class="min-w-full">
@@ -49,6 +61,10 @@
 
                     <tbody>
                         @forelse($ranking as $user)
+                            @php
+                                $puedeVerDetalle = auth()->user()->quiniela_finalizada && $user->quiniela_finalizada;
+                            @endphp
+
                             <tr class="border-b border-slate-100 hover:bg-[#f8f9ff]">
                                 <td class="px-6 py-5">
                                     <span class="inline-flex h-11 min-w-11 items-center justify-center rounded-xl bg-[#edf1ff] px-3 text-lg font-black text-[#1238ff]">
@@ -57,7 +73,11 @@
                                 </td>
 
                                 <td class="px-6 py-5">
-                                    <a href="{{ route('ranking.detail', $user->id) }}" class="flex items-center gap-4">
+                                    @if($puedeVerDetalle)
+                                        <a href="{{ route('ranking.detail', $user->id) }}" class="flex items-center gap-4">
+                                    @else
+                                        <div class="flex items-center gap-4">
+                                    @endif
                                         @if($user->avatar)
                                             <img
                                                 src="{{ $user->avatar }}"
@@ -71,14 +91,29 @@
                                         @endif
 
                                         <div>
-                                            <p class="text-base font-black text-[#080f2f] hover:text-[#1238ff]">
+                                            <p class="text-base font-black text-[#080f2f] {{ $puedeVerDetalle ? 'hover:text-[#1238ff]' : '' }}">
                                                 {{ $user->name }}
                                             </p>
-                                            <p class="mt-1 text-xs font-bold text-[#080f2f]/45">
-                                                Ver detalle de puntos
-                                            </p>
+
+                                            @if($puedeVerDetalle)
+                                                <p class="mt-1 text-xs font-bold text-[#080f2f]/45">
+                                                    Ver detalle de puntos
+                                                </p>
+                                            @elseif(!auth()->user()->quiniela_finalizada)
+                                                <p class="mt-1 text-xs font-bold text-[#080f2f]/45">
+                                                    Finalizá tu quiniela para ver detalles
+                                                </p>
+                                            @else
+                                                <p class="mt-1 text-xs font-bold text-[#080f2f]/45">
+                                                    Detalle pendiente hasta que finalice
+                                                </p>
+                                            @endif
                                         </div>
-                                    </a>
+                                    @if($puedeVerDetalle)
+                                        </a>
+                                    @else
+                                        </div>
+                                    @endif
                                 </td>
 
                                 <td class="px-6 py-5 text-center">
@@ -88,7 +123,7 @@
                                         </span>
                                     @else
                                         <span class="rounded-xl bg-[#ffc400]/20 px-4 py-2 text-xs font-black text-[#080f2f]">
-                                            En progreso
+                                            Pendiente
                                         </span>
                                     @endif
                                 </td>

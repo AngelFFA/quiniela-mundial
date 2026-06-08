@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PageController extends Controller
@@ -47,6 +48,20 @@ class PageController extends Controller
 
     public function rankingDetail(User $user)
     {
+        $currentUser = Auth::user();
+
+        if (!$currentUser || !$currentUser->quiniela_finalizada) {
+            return redirect()
+                ->route('ranking')
+                ->with('error', 'Debe finalizar su quiniela antes de ver el detalle de otros participantes.');
+        }
+
+        if (!$user->quiniela_finalizada) {
+            return redirect()
+                ->route('ranking')
+                ->with('error', 'Este participante aún no ha finalizado su quiniela.');
+        }
+
         $details = DB::table('predictions')
             ->join('match_games', 'predictions.match_game_id', '=', 'match_games.id')
             ->join('teams as home_team', 'match_games.home_team_id', '=', 'home_team.id')
