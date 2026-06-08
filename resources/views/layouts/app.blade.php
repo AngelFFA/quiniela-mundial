@@ -44,8 +44,8 @@
                             Quinielas
                         </a>
 
-                        <a href="{{ route('ranking') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">
-                            Ranking
+                        <a href="{{ route('Tabla General') }}" class="text-sm font-bold text-[#080f2f]/70 hover:text-[#1238ff]">
+                            Tabla General
                         </a>
 
                         <a href="{{ route('results.index') }}" class="text-sm font-bold text-[#e51b2b] hover:text-[#1238ff]">
