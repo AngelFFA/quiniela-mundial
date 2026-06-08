@@ -20,6 +20,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/pronosticos', [PredictionController::class, 'index'])->name('predictions.index');
     Route::post('/pronosticos/guardar', [PredictionController::class, 'store'])->name('predictions.store');
+    Route::post('/pronosticos/finalizar', [PredictionController::class, 'finalize'])->name('predictions.finalize');
+
     Route::get('/quinielas', [PredictionController::class, 'publicList'])->name('predictions.public');
 
     Route::get('/resultados', [ResultController::class, 'index'])->name('results.index');

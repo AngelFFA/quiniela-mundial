@@ -64,6 +64,14 @@ class PredictionController extends Controller
 
     public function store(Request $request, BracketSimulatorService $simulator)
     {
+        $user = Auth::user();
+
+        if ($user->quiniela_finalizada) {
+            return redirect()
+                ->route('predictions.index')
+                ->with('error', 'Su quiniela ya fue finalizada y no puede modificarse.');
+        }
+
         $activeTab = $request->input('active_tab', 'tables');
 
         if ($request->has('predictions')) {
@@ -96,7 +104,7 @@ class PredictionController extends Controller
             return redirect()
                 ->route('predictions.index', ['tab' => $activeTab])
                 ->with('active_tab', $activeTab)
-                ->with('success', 'Pronósticos guardados y simulación actualizada.');
+                ->with('success', 'Pronósticos guardados preliminarmente. Las tablas y la llave fueron actualizadas.');
         }
 
         if ($request->has('bracket')) {
@@ -108,12 +116,65 @@ class PredictionController extends Controller
             return redirect()
                 ->route('predictions.index', ['tab' => 'bracket'])
                 ->with('active_tab', 'bracket')
-                ->with('success', 'Llave guardada y cruces actualizados.');
+                ->with('success', 'Llave guardada preliminarmente.');
         }
 
         return redirect()
             ->route('predictions.index')
             ->with('error', 'No hay datos para guardar.');
+    }
+
+    public function finalize(Request $request, BracketSimulatorService $simulator)
+    {
+        $user = Auth::user();
+
+        if ($user->quiniela_finalizada) {
+            return redirect()
+                ->route('predictions.index')
+                ->with('error', 'Su quiniela ya fue finalizada anteriormente.');
+        }
+
+        $totalGroupMatches = MatchGame::where('stage', 'Grupos')->count();
+
+        $completedPredictions = Prediction::where('user_id', Auth::id())
+            ->whereNotNull('predicted_home_score')
+            ->whereNotNull('predicted_away_score')
+            ->count();
+
+        if ($completedPredictions < $totalGroupMatches) {
+            return redirect()
+                ->route('predictions.index', ['tab' => 'groups'])
+                ->with('active_tab', 'groups')
+                ->with('error', 'Debe completar todos los partidos de la fase de grupos antes de finalizar su quiniela.');
+        }
+
+        $simulator->generateForUser(Auth::id());
+
+        $pendingBracket = UserBracketMatch::where('user_id', Auth::id())
+            ->whereNotNull('home_team_id')
+            ->whereNotNull('away_team_id')
+            ->where(function ($query) {
+                $query->whereNull('predicted_home_score')
+                    ->orWhereNull('predicted_away_score')
+                    ->orWhereNull('predicted_winner_team_id');
+            })
+            ->count();
+
+        if ($pendingBracket > 0) {
+            return redirect()
+                ->route('predictions.index', ['tab' => 'bracket'])
+                ->with('active_tab', 'bracket')
+                ->with('error', 'Debe completar toda la llave de eliminación antes de finalizar su quiniela.');
+        }
+
+        $user->forceFill([
+            'quiniela_finalizada' => true,
+            'quiniela_finalizada_at' => now(),
+        ])->save();
+
+        return redirect()
+            ->route('predictions.index')
+            ->with('success', 'Su quiniela fue finalizada correctamente. A partir de este momento ya no podrá realizar modificaciones.');
     }
 
     public function publicList(Request $request)

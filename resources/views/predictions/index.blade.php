@@ -97,6 +97,8 @@
     ];
 
     $activeTab = $activeTab ?? 'groups';
+    $quinielaFinalizada = (bool) (auth()->user()->quiniela_finalizada ?? false);
+    $quinielaFinalizadaAt = auth()->user()->quiniela_finalizada_at ?? null;
 @endphp
 
 <style>
@@ -482,6 +484,13 @@
             </div>
         @endif
 
+
+        @if($quinielaFinalizada)
+            <div class="mt-6 rounded-3xl border border-[#159447]/20 bg-[#159447]/10 px-5 py-4 text-sm font-bold text-[#0c6f32]">
+                Su quiniela ya fue finalizada. A partir de este momento no puede realizar modificaciones.
+            </div>
+        @endif
+
         <div class="mt-8 rounded-[2rem] bg-white p-4 shadow-xl ring-1 ring-black/5">
             <div class="grid gap-3 md:grid-cols-4">
                 <button type="button" class="main-tab-btn active rounded-2xl px-4 py-3 text-sm" data-main-tab="groups">
@@ -504,7 +513,7 @@
 
         <div class="mt-6">
             <div class="main-tab-panel active" data-main-panel="groups">
-                <form method="POST" action="{{ route('predictions.store') }}">
+                <form method="POST" action="{{ route('predictions.store') }}" onsubmit="return confirmarGuardadoPreliminar();">
                     @csrf
                     <input type="hidden" name="active_tab" value="tables">
 
@@ -519,10 +528,25 @@
 
                             <button
                                 type="submit"
-                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1]"
+                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1] {{ $quinielaFinalizada ? 'cursor-not-allowed opacity-50' : '' }}"
+                                @disabled($quinielaFinalizada)
                             >
-                                Guardar y actualizar
+                                Guardar preliminarmente
                             </button>
+
+
+                            <button
+                                type="submit"
+                                form="finalizar-quiniela-form"
+                                onclick="return confirmarFinalizacion();"
+                                class="rounded-2xl bg-[#159447] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0c6f32] {{ $quinielaFinalizada ? 'cursor-not-allowed opacity-50' : '' }}"
+                                @disabled($quinielaFinalizada)
+                            >
+                                Finalizar quiniela
+                            </button>
+
+
+
                         </div>
 
                         <div class="mt-6 grid gap-3 md:grid-cols-3">
@@ -608,6 +632,7 @@
                                                                     min="0"
                                                                     name="predictions[{{ $match->id }}][home]"
                                                                     value="{{ $homeValue }}"
+                                                                    @disabled($quinielaFinalizada)
                                                                     class="h-12 w-11 rounded-xl border border-[#d7dfef] bg-white text-center text-lg font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
                                                                 >
 
@@ -618,6 +643,7 @@
                                                                     min="0"
                                                                     name="predictions[{{ $match->id }}][away]"
                                                                     value="{{ $awayValue }}"
+                                                                    @disabled($quinielaFinalizada)
                                                                     class="h-12 w-11 rounded-xl border border-[#d7dfef] bg-white text-center text-lg font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
                                                                 >
                                                             </div>
@@ -646,12 +672,23 @@
                             </div>
                         @endforeach
 
-                        <div class="mt-8 flex justify-end">
+                        <div class="mt-8 flex flex-col justify-end gap-3 sm:flex-row">
                             <button
                                 type="submit"
-                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1]"
+                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1] {{ $quinielaFinalizada ? 'cursor-not-allowed opacity-50' : '' }}"
+                                @disabled($quinielaFinalizada)
                             >
-                                Guardar y actualizar
+                                Guardar preliminarmente
+                            </button>
+
+                            <button
+                                type="submit"
+                                form="finalizar-quiniela-form"
+                                onclick="return confirmarFinalizacion();"
+                                class="rounded-2xl bg-[#159447] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0c6f32] {{ $quinielaFinalizada ? 'cursor-not-allowed opacity-50' : '' }}"
+                                @disabled($quinielaFinalizada)
+                            >
+                                Finalizar quiniela
                             </button>
                         </div>
                     </div>
@@ -792,7 +829,7 @@
             </div>
 
             <div class="main-tab-panel" data-main-panel="bracket">
-                <form method="POST" action="{{ route('predictions.store') }}">
+                <form method="POST" action="{{ route('predictions.store') }}" onsubmit="return confirmarGuardadoLlave();">
                     @csrf
                     <input type="hidden" name="active_tab" value="bracket">
 
@@ -857,6 +894,7 @@
                                                                         min="0"
                                                                         name="bracket[{{ $matchModel->id }}][home]"
                                                                         value="{{ old("bracket.{$matchModel->id}.home", $matchModel->predicted_home_score) }}"
+                                                                        @disabled($quinielaFinalizada)
                                                                         class="bracket-score-input"
                                                                     >
                                                                 @else
@@ -881,6 +919,7 @@
                                                                         min="0"
                                                                         name="bracket[{{ $matchModel->id }}][away]"
                                                                         value="{{ old("bracket.{$matchModel->id}.away", $matchModel->predicted_away_score) }}"
+                                                                        @disabled($quinielaFinalizada)
                                                                         class="bracket-score-input"
                                                                     >
                                                                 @else
@@ -889,7 +928,7 @@
                                                             </div>
 
                                                             @if($matchModel && $matchModel->homeTeam && $matchModel->awayTeam)
-                                                                <select name="bracket[{{ $matchModel->id }}][winner]" class="bracket-winner-select">
+                                                                <select name="bracket[{{ $matchModel->id }}][winner]" class="bracket-winner-select" @disabled($quinielaFinalizada)>
                                                                     <option value="">Desempate</option>
 
                                                                     <option
@@ -920,7 +959,8 @@
                         <div class="mt-8 flex justify-end">
                             <button
                                 type="submit"
-                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1]"
+                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1] {{ $quinielaFinalizada ? 'cursor-not-allowed opacity-50' : '' }}"
+                                @disabled($quinielaFinalizada)
                             >
                                 Guardar llave
                             </button>
@@ -930,6 +970,11 @@
             </div>
         </div>
     </div>
+
+
+<form id="finalizar-quiniela-form" method="POST" action="{{ route('predictions.finalize') }}" class="hidden">
+    @csrf
+</form>
 </section>
 
 <script>
@@ -977,6 +1022,34 @@
         });
 
         activateGroupTab('set_1');
+
+        window.confirmarGuardadoPreliminar = function () {
+            @if($quinielaFinalizada)
+                alert('Su quiniela ya fue finalizada y no puede modificarse.');
+                return false;
+            @else
+                return confirm('Al guardar preliminarmente, las tablas y la llave se recalcularán automáticamente. Si modificó uno o más resultados de la fase de grupos, los cruces de la llave podrían restablecerse. ¿Desea continuar?');
+            @endif
+        };
+
+        window.confirmarGuardadoLlave = function () {
+            @if($quinielaFinalizada)
+                alert('Su quiniela ya fue finalizada y no puede modificarse.');
+                return false;
+            @else
+                return confirm('Se guardarán preliminarmente los pronósticos de la llave de eliminación. ¿Desea continuar?');
+            @endif
+        };
+
+        window.confirmarFinalizacion = function () {
+            @if($quinielaFinalizada)
+                alert('Su quiniela ya fue finalizada anteriormente.');
+                return false;
+            @else
+                return confirm('¿Está seguro de finalizar su quiniela? Después de finalizarla ya no podrá modificar sus pronósticos.');
+            @endif
+        };
+
     });
 </script>
 @endsection
