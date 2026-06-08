@@ -17,6 +17,7 @@ Route::post('/logout', [GoogleController::class, 'logout'])->name('logout');
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
     Route::get('/ranking', [PageController::class, 'ranking'])->name('ranking');
+    Route::get('/ranking/{user}', [PageController::class, 'rankingDetail'])->name('ranking.detail');
 
     Route::get('/pronosticos', [PredictionController::class, 'index'])->name('predictions.index');
     Route::post('/pronosticos/guardar', [PredictionController::class, 'store'])->name('predictions.store');

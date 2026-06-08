@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Ranking - Quiniela Mundial'])
+@extends('layouts.app', ['title' => 'Tabla General - Quiniela Mundial'])
 
 @section('content')
 <section class="relative px-6 py-12">
@@ -10,11 +10,11 @@
                 </div>
 
                 <h1 class="mt-6 text-4xl font-black leading-tight text-[#080f2f] md:text-6xl">
-                    Ranking General
+                    Tabla General
                 </h1>
 
                 <p class="mt-4 max-w-3xl text-base font-medium leading-8 text-[#080f2f]/65 md:text-lg">
-                    Tabla de posiciones de todos los participantes de la quiniela.
+                    Posiciones generales de todos los participantes de la quiniela. Podés presionar el nombre de un participante para ver el detalle de sus puntos.
                 </p>
             </div>
 
@@ -38,25 +38,12 @@
                 <table class="min-w-full">
                     <thead class="bg-[#080f2f] text-white">
                         <tr>
-                            <th class="px-6 py-5 text-left text-sm font-black uppercase">
-                                #
-                            </th>
-
-                            <th class="px-6 py-5 text-left text-sm font-black uppercase">
-                                Participante
-                            </th>
-
-                            <th class="px-6 py-5 text-center text-sm font-black uppercase">
-                                Puntos
-                            </th>
-
-                            <th class="px-6 py-5 text-center text-sm font-black uppercase">
-                                Exactos
-                            </th>
-
-                            <th class="px-6 py-5 text-center text-sm font-black uppercase">
-                                Pronósticos
-                            </th>
+                            <th class="px-6 py-5 text-left text-sm font-black uppercase">#</th>
+                            <th class="px-6 py-5 text-left text-sm font-black uppercase">Participante</th>
+                            <th class="px-6 py-5 text-center text-sm font-black uppercase">Estado</th>
+                            <th class="px-6 py-5 text-center text-sm font-black uppercase">Puntos</th>
+                            <th class="px-6 py-5 text-center text-sm font-black uppercase">Exactos</th>
+                            <th class="px-6 py-5 text-center text-sm font-black uppercase">Pronósticos</th>
                         </tr>
                     </thead>
 
@@ -70,7 +57,7 @@
                                 </td>
 
                                 <td class="px-6 py-5">
-                                    <div class="flex items-center gap-4">
+                                    <a href="{{ route('ranking.detail', $user->id) }}" class="flex items-center gap-4">
                                         @if($user->avatar)
                                             <img
                                                 src="{{ $user->avatar }}"
@@ -84,11 +71,26 @@
                                         @endif
 
                                         <div>
-                                            <p class="text-base font-black text-[#080f2f]">
+                                            <p class="text-base font-black text-[#080f2f] hover:text-[#1238ff]">
                                                 {{ $user->name }}
                                             </p>
+                                            <p class="mt-1 text-xs font-bold text-[#080f2f]/45">
+                                                Ver detalle de puntos
+                                            </p>
                                         </div>
-                                    </div>
+                                    </a>
+                                </td>
+
+                                <td class="px-6 py-5 text-center">
+                                    @if($user->quiniela_finalizada)
+                                        <span class="rounded-xl bg-[#159447]/10 px-4 py-2 text-xs font-black text-[#159447]">
+                                            Finalizada
+                                        </span>
+                                    @else
+                                        <span class="rounded-xl bg-[#ffc400]/20 px-4 py-2 text-xs font-black text-[#080f2f]">
+                                            En progreso
+                                        </span>
+                                    @endif
                                 </td>
 
                                 <td class="px-6 py-5 text-center">
@@ -111,7 +113,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-16 text-center text-lg font-black text-[#080f2f]/45">
+                                <td colspan="6" class="px-6 py-16 text-center text-lg font-black text-[#080f2f]/45">
                                     No hay participantes todavía.
                                 </td>
                             </tr>
