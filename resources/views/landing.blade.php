@@ -103,7 +103,7 @@
                     <p class="mt-5 text-2xl sm:mt-7 sm:text-3xl">→</p>
                 </a>
 
-                <a href="{{ route('Tabla General') }}" class="bg-[#159447] p-6 text-white sm:p-8">
+                <a href="{{ route('ranking') }}" class="bg-[#159447] p-6 text-white sm:p-8">
                     <h3 class="text-xl font-black sm:text-2xl">Tabla General</h3>
                     <p class="mt-2 text-sm font-medium text-white/75">
                         Seguimiento de puntos y posiciones.
@@ -137,7 +137,7 @@
                     <p class="mt-5 text-2xl sm:mt-7 sm:text-3xl">→</p>
                 </a>
 
-                <a href="{{ route('Tabla General') }}" class="bg-[#159447] p-6 text-white sm:p-8">
+                <a href="{{ route('ranking') }}" class="bg-[#159447] p-6 text-white sm:p-8">
                     <h3 class="text-xl font-black sm:text-2xl">Tabla General</h3>
                     <p class="mt-2 text-sm font-medium text-white/75">
                         Tabla general de participantes.
