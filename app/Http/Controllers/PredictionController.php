@@ -50,6 +50,14 @@ class PredictionController extends Controller
             ->orderBy('slot')
             ->get();
 
+        $yaTieneLlaves = UserBracketMatch::where('user_id', Auth::id())
+            ->where(function ($query) {
+                $query->whereNotNull('predicted_home_score')
+                    ->orWhereNotNull('predicted_away_score')
+                    ->orWhereNotNull('predicted_winner_team_id');
+            })
+            ->exists();
+
         $activeTab = $request->get('tab', session('active_tab', 'groups'));
 
         return view('predictions.index', compact(
@@ -58,7 +66,8 @@ class PredictionController extends Controller
             'standings',
             'bestThirds',
             'bracketMatches',
-            'activeTab'
+            'activeTab',
+            'yaTieneLlaves'
         ));
     }
 
@@ -73,6 +82,7 @@ class PredictionController extends Controller
         }
 
         $activeTab = $request->input('active_tab', 'tables');
+        $resetBracket = $request->input('reset_bracket') == '1';
 
         if ($request->has('predictions')) {
             foreach ($request->input('predictions', []) as $matchId => $prediction) {
@@ -99,12 +109,16 @@ class PredictionController extends Controller
                 );
             }
 
+            if ($resetBracket) {
+                UserBracketMatch::where('user_id', Auth::id())->delete();
+            }
+
             $simulator->generateForUser(Auth::id());
 
             return redirect()
                 ->route('predictions.index', ['tab' => $activeTab])
                 ->with('active_tab', $activeTab)
-                ->with('success', 'Pronósticos guardados preliminarmente. Las tablas y la llave fueron actualizadas.');
+                ->with('success', 'Fase de grupos guardada correctamente. Las tablas y la llave fueron actualizadas.');
         }
 
         if ($request->has('bracket')) {
@@ -116,7 +130,7 @@ class PredictionController extends Controller
             return redirect()
                 ->route('predictions.index', ['tab' => 'bracket'])
                 ->with('active_tab', 'bracket')
-                ->with('success', 'Llave guardada preliminarmente.');
+                ->with('success', 'Llave guardada correctamente.');
         }
 
         return redirect()

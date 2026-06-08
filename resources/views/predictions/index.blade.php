@@ -99,6 +99,7 @@
     $activeTab = $activeTab ?? 'groups';
     $quinielaFinalizada = (bool) (auth()->user()->quiniela_finalizada ?? false);
     $quinielaFinalizadaAt = auth()->user()->quiniela_finalizada_at ?? null;
+    $yaTieneLlaves = (bool) ($yaTieneLlaves ?? false);
 @endphp
 
 <style>
@@ -422,7 +423,6 @@
     .thirds-header {
         grid-template-columns: 60px 34px 1fr 80px 80px 130px;
     }
-
 </style>
 
 <section class="px-6 py-10">
@@ -438,7 +438,7 @@
                 </h1>
 
                 <p class="mt-4 max-w-3xl text-base font-medium leading-7 text-[#080f2f]/65">
-                    En esta misma pantalla llenás grupos, ves tablas, mejores terceros y la llave completa del torneo.
+                    Completá primero la fase de grupos. Después podés revisar tablas, mejores terceros y llenar la llave de eliminación.
                 </p>
             </div>
 
@@ -467,7 +467,7 @@
                 </div>
 
                 <p class="mt-4 text-sm font-medium text-white/65">
-                    Guardá tus grupos y abajo mismo vas viendo clasificación, mejores terceros y cruces.
+                    Guardá la fase de grupos para calcular tablas, mejores terceros y cruces. Si después cambiás grupos, la llave puede recalcularse.
                 </p>
             </div>
         </div>
@@ -483,7 +483,6 @@
                 {{ session('error') }}
             </div>
         @endif
-
 
         @if($quinielaFinalizada)
             <div class="mt-6 rounded-3xl border border-[#159447]/20 bg-[#159447]/10 px-5 py-4 text-sm font-bold text-[#0c6f32]">
@@ -513,40 +512,19 @@
 
         <div class="mt-6">
             <div class="main-tab-panel active" data-main-panel="groups">
-                <form method="POST" action="{{ route('predictions.store') }}" onsubmit="return confirmarGuardadoPreliminar();">
+                <form id="grupos-form" method="POST" action="{{ route('predictions.store') }}" onsubmit="return confirmarGuardadoGrupos();">
                     @csrf
                     <input type="hidden" name="active_tab" value="tables">
+                    <input type="hidden" name="reset_bracket" id="reset_bracket" value="0">
 
                     <div class="rounded-[2rem] bg-white p-6 shadow-xl ring-1 ring-black/5">
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                             <div>
                                 <h2 class="text-2xl font-black text-[#080f2f]">Fase de grupos</h2>
                                 <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
-                                    Llená los marcadores. Al guardar, se recalculan tus tablas y cruces.
+                                    Llená los marcadores de grupos. Al guardar, se actualizan las tablas y se calculan los cruces.
                                 </p>
                             </div>
-
-                            <button
-                                type="submit"
-                                class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1] {{ $quinielaFinalizada ? 'cursor-not-allowed opacity-50' : '' }}"
-                                @disabled($quinielaFinalizada)
-                            >
-                                Guardar preliminarmente
-                            </button>
-
-
-                            <button
-                                type="submit"
-                                form="finalizar-quiniela-form"
-                                onclick="return confirmarFinalizacion();"
-                                class="rounded-2xl bg-[#159447] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0c6f32] {{ $quinielaFinalizada ? 'cursor-not-allowed opacity-50' : '' }}"
-                                @disabled($quinielaFinalizada)
-                            >
-                                Finalizar quiniela
-                            </button>
-
-
-
                         </div>
 
                         <div class="mt-6 grid gap-3 md:grid-cols-3">
@@ -632,8 +610,9 @@
                                                                     min="0"
                                                                     name="predictions[{{ $match->id }}][home]"
                                                                     value="{{ $homeValue }}"
+                                                                    data-original="{{ $homeValue }}"
                                                                     @disabled($quinielaFinalizada)
-                                                                    class="h-12 w-11 rounded-xl border border-[#d7dfef] bg-white text-center text-lg font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
+                                                                    class="group-score-input h-12 w-11 rounded-xl border border-[#d7dfef] bg-white text-center text-lg font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
                                                                 >
 
                                                                 <span class="text-sm font-black text-[#9ba5bf] sm:text-lg">-</span>
@@ -643,8 +622,9 @@
                                                                     min="0"
                                                                     name="predictions[{{ $match->id }}][away]"
                                                                     value="{{ $awayValue }}"
+                                                                    data-original="{{ $awayValue }}"
                                                                     @disabled($quinielaFinalizada)
-                                                                    class="h-12 w-11 rounded-xl border border-[#d7dfef] bg-white text-center text-lg font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
+                                                                    class="group-score-input h-12 w-11 rounded-xl border border-[#d7dfef] bg-white text-center text-lg font-black text-[#080f2f] outline-none focus:border-[#1238ff] focus:ring-2 focus:ring-[#1238ff]/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-xl"
                                                                 >
                                                             </div>
 
@@ -678,7 +658,7 @@
                                 class="rounded-2xl bg-[#1238ff] px-6 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#0e2ed1] {{ $quinielaFinalizada ? 'cursor-not-allowed opacity-50' : '' }}"
                                 @disabled($quinielaFinalizada)
                             >
-                                Guardar preliminarmente
+                                Guardar fase de grupos
                             </button>
 
                             <button
@@ -841,13 +821,6 @@
                                     Ingresá los marcadores de cada cruce y guardá la llave.
                                 </p>
                             </div>
-
-                            <button
-                                type="submit"
-                                class="rounded-2xl bg-[#1238ff] px-5 py-3 text-sm font-black text-white"
-                            >
-                                Guardar llave
-                            </button>
                         </div>
 
                         <div class="mt-6">
@@ -971,15 +944,15 @@
         </div>
     </div>
 
-
-<form id="finalizar-quiniela-form" method="POST" action="{{ route('predictions.finalize') }}" class="hidden">
-    @csrf
-</form>
+    <form id="finalizar-quiniela-form" method="POST" action="{{ route('predictions.finalize') }}" class="hidden">
+        @csrf
+    </form>
 </section>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const currentMainTab = @json($activeTab);
+        const yaTieneLlaves = @json($yaTieneLlaves);
 
         const mainButtons = document.querySelectorAll('[data-main-tab]');
         const mainPanels = document.querySelectorAll('[data-main-panel]');
@@ -1023,12 +996,45 @@
 
         activateGroupTab('set_1');
 
-        window.confirmarGuardadoPreliminar = function () {
+        function gruposCambiaron() {
+            const inputs = document.querySelectorAll('.group-score-input');
+
+            for (const input of inputs) {
+                const actual = input.value ?? '';
+                const original = input.dataset.original ?? '';
+
+                if (actual !== original) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        window.confirmarGuardadoGrupos = function () {
             @if($quinielaFinalizada)
                 alert('Su quiniela ya fue finalizada y no puede modificarse.');
                 return false;
             @else
-                return confirm('Al guardar preliminarmente, las tablas y la llave se recalcularán automáticamente. Si modificó uno o más resultados de la fase de grupos, los cruces de la llave podrían restablecerse. ¿Desea continuar?');
+                const resetBracket = document.getElementById('reset_bracket');
+                resetBracket.value = '0';
+
+                if (yaTieneLlaves && gruposCambiaron()) {
+                    const confirmar = confirm(
+                        'Ya tenías pronósticos guardados en la llave de eliminación.\n\n' +
+                        'Si cambias la fase de grupos, pueden cambiar los clasificados y los cruces.\n\n' +
+                        'Al continuar, se guardará la fase de grupos, se recalculará la llave y se borrarán los pronósticos que ya habías llenado en octavos, cuartos, semifinales y final.\n\n' +
+                        '¿Deseas continuar?'
+                    );
+
+                    if (!confirmar) {
+                        return false;
+                    }
+
+                    resetBracket.value = '1';
+                }
+
+                return true;
             @endif
         };
 
@@ -1037,7 +1043,10 @@
                 alert('Su quiniela ya fue finalizada y no puede modificarse.');
                 return false;
             @else
-                return confirm('Se guardarán preliminarmente los pronósticos de la llave de eliminación. ¿Desea continuar?');
+                return confirm(
+                    'Se guardarán los marcadores y ganadores de la llave de eliminación.\n\n' +
+                    '¿Deseas continuar?'
+                );
             @endif
         };
 
@@ -1046,10 +1055,12 @@
                 alert('Su quiniela ya fue finalizada anteriormente.');
                 return false;
             @else
-                return confirm('¿Está seguro de finalizar su quiniela? Después de finalizarla ya no podrá modificar sus pronósticos.');
+                return confirm(
+                    '¿Deseas finalizar tu quiniela?\n\n' +
+                    'Al finalizar, tus pronósticos quedarán enviados definitivamente y ya no podrás modificarlos.'
+                );
             @endif
         };
-
     });
 </script>
 @endsection
