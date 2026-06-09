@@ -688,36 +688,58 @@ class BracketSimulatorService
     }
 
     private function resolveThirdPlaceMap(array $thirdGroups): array
-    {
-        $thirdGroups = array_values(array_unique(array_filter($thirdGroups)));
-        sort($thirdGroups);
+{
+    $thirdGroups = array_values(array_unique(array_filter($thirdGroups)));
+    sort($thirdGroups);
 
-        if (count($thirdGroups) < 8) {
-            return [];
-        }
+    $key = implode('', $thirdGroups);
 
-        $rules = [
-            '1A' => ['C', 'E', 'F', 'H', 'I'],
-            '1B' => ['E', 'F', 'G', 'I', 'J'],
-            '1D' => ['B', 'E', 'F', 'I', 'J'],
-            '1E' => ['A', 'B', 'C', 'D', 'F'],
-            '1G' => ['A', 'E', 'H', 'I', 'J'],
-            '1I' => ['C', 'D', 'F', 'G', 'H'],
-            '1K' => ['D', 'E', 'I', 'J', 'L'],
-            '1L' => ['E', 'H', 'I', 'J', 'K'],
-        ];
+    $officialMaps = [
+        // FIFA Annexe C - Option 474
+        // Third-place groups: A B C D E G I L
+        // Columns: 1A, 1B, 1D, 1E, 1G, 1I, 1K, 1L
+        'ABCDEGIL' => [
+            '1A' => 'E',
+            '1B' => 'G',
+            '1D' => 'B',
+            '1E' => 'C',
+            '1G' => 'A',
+            '1I' => 'D',
+            '1K' => 'L',
+            '1L' => 'I',
+        ],
+    ];
 
-        $slots = array_keys($rules);
-
-        usort($slots, function ($slotA, $slotB) use ($rules, $thirdGroups) {
-            $countA = count(array_values(array_intersect($rules[$slotA], $thirdGroups)));
-            $countB = count(array_values(array_intersect($rules[$slotB], $thirdGroups)));
-
-            return $countA <=> $countB;
-        });
-
-        return $this->assignThirds($slots, $rules, $thirdGroups, [], []);
+    if (isset($officialMaps[$key])) {
+        return $officialMaps[$key];
     }
+
+    if (count($thirdGroups) < 8) {
+        return [];
+    }
+
+    $rules = [
+        '1A' => ['C', 'E', 'F', 'H', 'I'],
+        '1B' => ['E', 'F', 'G', 'I', 'J'],
+        '1D' => ['B', 'E', 'F', 'I', 'J'],
+        '1E' => ['A', 'B', 'C', 'D', 'F'],
+        '1G' => ['A', 'E', 'H', 'I', 'J'],
+        '1I' => ['C', 'D', 'F', 'G', 'H'],
+        '1K' => ['D', 'E', 'I', 'J', 'L'],
+        '1L' => ['E', 'H', 'I', 'J', 'K'],
+    ];
+
+    $slots = array_keys($rules);
+
+    usort($slots, function ($slotA, $slotB) use ($rules, $thirdGroups) {
+        $countA = count(array_values(array_intersect($rules[$slotA], $thirdGroups)));
+        $countB = count(array_values(array_intersect($rules[$slotB], $thirdGroups)));
+
+        return $countA <=> $countB;
+    });
+
+    return $this->assignThirds($slots, $rules, $thirdGroups, [], []);
+}
 
     private function assignThirds(array $slots, array $rules, array $thirdGroups, array $assigned, array $used): array
     {
