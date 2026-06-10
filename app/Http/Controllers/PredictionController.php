@@ -164,21 +164,17 @@ class PredictionController extends Controller
 
         $simulator->generateForUser(Auth::id());
 
-        $pendingBracket = UserBracketMatch::where('user_id', Auth::id())
+        $roundOf32Ready = UserBracketMatch::where('user_id', Auth::id())
+            ->whereBetween('slot', [73, 88])
             ->whereNotNull('home_team_id')
             ->whereNotNull('away_team_id')
-            ->where(function ($query) {
-                $query->whereNull('predicted_home_score')
-                    ->orWhereNull('predicted_away_score')
-                    ->orWhereNull('predicted_winner_team_id');
-            })
             ->count();
 
-        if ($pendingBracket > 0) {
+        if ($roundOf32Ready < 16) {
             return redirect()
                 ->route('predictions.index', ['tab' => 'bracket'])
                 ->with('active_tab', 'bracket')
-                ->with('error', 'Debe completar toda la llave de eliminación antes de finalizar su quiniela.');
+                ->with('error', 'Debe guardar la fase de grupos para generar la llave de dieciseisavos antes de finalizar su quiniela.');
         }
 
         $user->forceFill([
