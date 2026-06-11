@@ -189,11 +189,33 @@ class PredictionController extends Controller
 
     public function publicList(Request $request)
     {
-        $users = User::orderBy('name')->get();
+        $currentUser = Auth::user();
 
-        $selectedUserId = $request->get('user_id', Auth::id());
+        if (!$currentUser || !$currentUser->quiniela_finalizada) {
+            return redirect()
+                ->route('predictions.index')
+                ->with('error', 'Debe finalizar su quiniela antes de ver las quinielas de otros participantes.');
+        }
 
-        $selectedUser = User::findOrFail($selectedUserId);
+        $users = User::where('quiniela_finalizada', true)
+            ->orderBy('name')
+            ->get();
+
+        if ($users->isEmpty()) {
+            return redirect()
+                ->route('predictions.index')
+                ->with('error', 'Todavía no hay quinielas finalizadas disponibles.');
+        }
+
+        $selectedUserId = $request->get('user_id', $currentUser->id);
+
+        $selectedUser = User::where('quiniela_finalizada', true)
+            ->where('id', $selectedUserId)
+            ->first();
+
+        if (!$selectedUser) {
+            $selectedUser = $users->first();
+        }
 
         $matches = MatchGame::with(['homeTeam', 'awayTeam'])
             ->where('stage', 'Grupos')
