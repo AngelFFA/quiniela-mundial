@@ -262,4 +262,71 @@ class PredictionController extends Controller
             'bracketMatches'
         ));
     }
+
+    public function printFinalized()
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser || !$currentUser->quiniela_finalizada) {
+            return redirect()
+                ->route('predictions.index')
+                ->with('error', 'Debe finalizar su quiniela antes de imprimir las quinielas de otros participantes.');
+        }
+
+        $users = User::where('quiniela_finalizada', true)
+            ->orderBy('name')
+            ->get();
+
+        if ($users->isEmpty()) {
+            return redirect()
+                ->route('predictions.public')
+                ->with('error', 'Todavía no hay quinielas finalizadas disponibles para imprimir.');
+        }
+
+        $matches = MatchGame::with(['homeTeam', 'awayTeam'])
+            ->where('stage', 'Grupos')
+            ->orderBy('group_name')
+            ->orderBy('match_date')
+            ->get();
+
+        $predictions = Prediction::whereIn('user_id', $users->pluck('id'))
+            ->get()
+            ->groupBy('user_id');
+
+        $standings = UserGroupStanding::with('team')
+            ->whereIn('user_id', $users->pluck('id'))
+            ->orderBy('group_name')
+            ->orderBy('position')
+            ->get()
+            ->groupBy('user_id');
+
+        $bestThirds = UserGroupStanding::with('team')
+            ->whereIn('user_id', $users->pluck('id'))
+            ->where('position', 3)
+            ->orderByDesc('points')
+            ->orderByDesc('goal_difference')
+            ->orderByDesc('goals_for')
+            ->get()
+            ->groupBy('user_id');
+
+        $bracketMatches = UserBracketMatch::with([
+            'homeTeam',
+            'awayTeam',
+            'predictedWinnerTeam',
+        ])
+            ->whereIn('user_id', $users->pluck('id'))
+            ->orderBy('slot')
+            ->get()
+            ->groupBy('user_id');
+
+        return view('predictions.print', compact(
+            'users',
+            'matches',
+            'predictions',
+            'standings',
+            'bestThirds',
+            'bracketMatches'
+        ));
+    }
+
 }

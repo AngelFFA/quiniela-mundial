@@ -253,6 +253,16 @@
                 <p class="mt-4 max-w-3xl text-base font-medium leading-8 text-[#080f2f]/65 md:text-lg">
                     Revisá la quiniela completa de cada participante en modo solo lectura.
                 </p>
+
+                <div class="mt-6">
+                    <a
+                        href="{{ route('predictions.print') }}"
+                        target="_blank"
+                        class="inline-flex items-center justify-center rounded-2xl bg-[#080f2f] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#1238ff]"
+                    >
+                        Imprimir quinielas finalizadas
+                    </a>
+                </div>
             </div>
 
             <div class="rounded-[2rem] bg-[#080f2f] p-7 text-white shadow-2xl">

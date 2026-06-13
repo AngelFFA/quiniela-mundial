@@ -24,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/pronosticos/finalizar', [PredictionController::class, 'finalize'])->name('predictions.finalize');
 
     Route::get('/quinielas', [PredictionController::class, 'publicList'])->name('predictions.public');
+    Route::get('/quinielas/imprimir', [PredictionController::class, 'printFinalized'])->name('predictions.print');
 
     Route::get('/resultados', [ResultController::class, 'index'])->name('results.index');
     Route::post('/resultados/guardar', [ResultController::class, 'store'])->name('results.store');
