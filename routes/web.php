@@ -16,6 +16,7 @@ Route::post('/logout', [GoogleController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
+
     Route::get('/ranking', [PageController::class, 'ranking'])->name('ranking');
     Route::get('/ranking/{user}', [PageController::class, 'rankingDetail'])->name('ranking.detail');
 
@@ -25,6 +26,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/quinielas', [PredictionController::class, 'publicList'])->name('predictions.public');
     Route::get('/quinielas/imprimir', [PredictionController::class, 'printFinalized'])->name('predictions.print');
+    Route::get('/quinielas/por-partido', [PredictionController::class, 'byMatch'])->name('predictions.by_match');
 
     Route::get('/resultados', [ResultController::class, 'index'])->name('results.index');
     Route::post('/resultados/guardar', [ResultController::class, 'store'])->name('results.store');

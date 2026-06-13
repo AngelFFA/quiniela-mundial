@@ -329,4 +329,36 @@ class PredictionController extends Controller
         ));
     }
 
+    public function byMatch()
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser || !$currentUser->quiniela_finalizada) {
+            return redirect()
+                ->route('predictions.index')
+                ->with('error', 'Debe finalizar su quiniela antes de ver los pronósticos de todos por partido.');
+        }
+
+        $users = User::where('quiniela_finalizada', true)
+            ->orderBy('name')
+            ->get();
+
+        $matches = MatchGame::with(['homeTeam', 'awayTeam'])
+            ->where('stage', 'Grupos')
+            ->orderBy('group_name')
+            ->orderBy('match_date')
+            ->get()
+            ->groupBy('group_name');
+
+        $predictions = Prediction::whereIn('user_id', $users->pluck('id'))
+            ->get()
+            ->groupBy('match_game_id');
+
+        return view('predictions.by_match', compact(
+            'users',
+            'matches',
+            'predictions'
+        ));
+    }
+
 }

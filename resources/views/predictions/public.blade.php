@@ -254,7 +254,14 @@
                     Revisá la quiniela completa de cada participante en modo solo lectura.
                 </p>
 
-                <div class="mt-6">
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <a
+                        href="{{ route('predictions.by_match') }}"
+                        class="inline-flex items-center justify-center rounded-2xl bg-[#1238ff] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#080f2f]"
+                    >
+                        Ver pronósticos por partido
+                    </a>
+
                     <a
                         href="{{ route('predictions.print') }}"
                         target="_blank"
