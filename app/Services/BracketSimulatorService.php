@@ -694,23 +694,9 @@ class BracketSimulatorService
 
     $key = implode('', $thirdGroups);
 
-    $officialMaps = [
-        // FIFA Annexe C - Option 474
-        // Third-place groups: A B C D E G I L
-        // Columns: 1A, 1B, 1D, 1E, 1G, 1I, 1K, 1L
-        'ABCDEGIL' => [
-            '1A' => 'E',
-            '1B' => 'G',
-            '1D' => 'B',
-            '1E' => 'C',
-            '1G' => 'A',
-            '1I' => 'D',
-            '1K' => 'L',
-            '1L' => 'I',
-        ],
-    ];
+    $officialMaps = config('worldcup_third_place', []);
 
-    if (isset($officialMaps[$key])) {
+    if (isset($officialMaps[$key]) && count($officialMaps[$key]) === 8) {
         return $officialMaps[$key];
     }
 

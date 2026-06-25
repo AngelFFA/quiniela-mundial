@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\BracketScoringService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,7 @@ class PageController extends Controller
         return view('rules');
     }
 
-    public function ranking()
+    public function ranking(BracketScoringService $bracketScoring)
     {
         $ranking = User::leftJoin('predictions', 'users.id', '=', 'predictions.user_id')
             ->leftJoin('prediction_scores', 'predictions.id', '=', 'prediction_scores.prediction_id')
@@ -34,19 +35,49 @@ class PageController extends Controller
                 'users.quiniela_finalizada',
                 'users.quiniela_finalizada_at',
                 DB::raw('COUNT(DISTINCT predictions.id) as predictions_count'),
-                DB::raw('COALESCE(SUM(prediction_scores.points), 0) as points'),
+                DB::raw('COALESCE(SUM(prediction_scores.points), 0) as group_points'),
                 DB::raw("SUM(CASE WHEN prediction_scores.reason = 'Marcador exacto' THEN 1 ELSE 0 END) as exact_results")
             )
             ->groupBy('users.id', 'users.name', 'users.avatar', 'users.quiniela_finalizada', 'users.quiniela_finalizada_at')
-            ->orderByDesc('points')
-            ->orderByDesc('exact_results')
-            ->orderByDesc('predictions_count')
             ->get();
+
+        $bracketScores = $bracketScoring->scoresForUsers($ranking->pluck('id'));
+
+        $ranking = $ranking
+            ->map(function ($user) use ($bracketScores) {
+                $score = $bracketScores->get((int) $user->id, [
+                    'points' => 0,
+                    'hits' => 0,
+                    'available' => false,
+                ]);
+
+                $user->group_points = (int) $user->group_points;
+                $user->bracket_points = (int) $score['points'];
+                $user->bracket_hits = (int) $score['hits'];
+                $user->bracket_available = (bool) $score['available'];
+                $user->points = $user->group_points + $user->bracket_points;
+
+                return $user;
+            })
+            ->sort(function ($userA, $userB) {
+                return [
+                    -(int) $userA->points,
+                    -(int) $userA->exact_results,
+                    -(int) $userA->predictions_count,
+                    (int) $userA->id,
+                ] <=> [
+                    -(int) $userB->points,
+                    -(int) $userB->exact_results,
+                    -(int) $userB->predictions_count,
+                    (int) $userB->id,
+                ];
+            })
+            ->values();
 
         return view('ranking', compact('ranking'));
     }
 
-    public function rankingDetail(User $user)
+    public function rankingDetail(User $user, BracketScoringService $bracketScoring)
     {
         $currentUser = Auth::user();
 
@@ -91,16 +122,25 @@ class PageController extends Controller
             ->orderBy('match_games.group_name')
             ->get();
 
-        $totalPoints = $details->sum('points');
+        $groupPoints = (int) $details->sum('points');
+        $bracketScore = $bracketScoring->scoreForUser((int) $user->id);
+        $bracketPoints = (int) $bracketScore['points'];
+        $totalPoints = $groupPoints + $bracketPoints;
         $exactResults = $details->where('reason', 'Marcador exacto')->count();
         $playedMatches = $details->where('is_finished', true)->count();
+        $bracketDetails = $bracketScore['details'];
+        $bracketAvailable = (bool) $bracketScore['available'];
 
         return view('ranking_detail', compact(
             'user',
             'details',
+            'groupPoints',
+            'bracketPoints',
             'totalPoints',
             'exactResults',
-            'playedMatches'
+            'playedMatches',
+            'bracketDetails',
+            'bracketAvailable'
         ));
     }
 }
