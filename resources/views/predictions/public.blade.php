@@ -594,6 +594,32 @@
             </div>
         </div>
     </div>
+
+        @if($canSeeRound32 ?? false)
+            <div class="mt-10 rounded-[2rem] bg-white p-5 shadow-xl ring-1 ring-black/5">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h2 class="text-2xl font-black text-[#080f2f]">Dieciseisavos</h2>
+                    <a href="{{ route('round32.by_match') }}" class="rounded-xl bg-[#1238ff] px-4 py-3 text-center text-sm font-black text-white">Ver los de todos</a>
+                </div>
+                <div class="mt-5 grid gap-4 md:grid-cols-2">
+                    @foreach($round32Slots as $slot)
+                        @php $match=$slot->match; $prediction=$match ? $round32Predictions->get($match->id) : null; @endphp
+                        @if($match)
+                            <div class="rounded-2xl bg-[#f4f6ff] p-4">
+                                <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
+                                    <div class="text-sm font-black text-[#080f2f]">{{ $match->homeTeam->name }}</div>
+                                    <div class="rounded-xl bg-white px-3 py-2 font-black text-[#080f2f]">{{ $prediction ? $prediction->predicted_home_score.' - '.$prediction->predicted_away_score : '-' }}</div>
+                                    <div class="text-sm font-black text-[#080f2f]">{{ $match->awayTeam->name }}</div>
+                                </div>
+                                @if($prediction && $prediction->predicted_home_score === $prediction->predicted_away_score && $prediction->predictedWinner)
+                                    <p class="mt-2 text-center text-xs font-bold text-[#080f2f]/55">Clasifica: {{ $prediction->predictedWinner->name }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        @endif
 </section>
 
 <script>

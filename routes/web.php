@@ -5,6 +5,7 @@ use App\Http\Controllers\BracketController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PredictionController;
 use App\Http\Controllers\ResultController;
+use App\Http\Controllers\RoundOf32Controller;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'landing'])->name('landing');
@@ -27,6 +28,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/quinielas', [PredictionController::class, 'publicList'])->name('predictions.public');
     Route::get('/quinielas/imprimir', [PredictionController::class, 'printFinalized'])->name('predictions.print');
     Route::get('/quinielas/por-partido', [PredictionController::class, 'byMatch'])->name('predictions.by_match');
+
+    Route::get('/dieciseisavos', [RoundOf32Controller::class, 'index'])->name('round32.index');
+    Route::post('/dieciseisavos/guardar', [RoundOf32Controller::class, 'store'])->name('round32.store');
+    Route::post('/dieciseisavos/finalizar', [RoundOf32Controller::class, 'finalize'])->name('round32.finalize');
+    Route::get('/quinielas/dieciseisavos', [RoundOf32Controller::class, 'byMatch'])->name('round32.by_match');
 
     Route::get('/resultados', [ResultController::class, 'index'])->name('results.index');
     Route::post('/resultados/guardar', [ResultController::class, 'store'])->name('results.store');

@@ -28,6 +28,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'quiniela_finalizada' => 'boolean',
+            'quiniela_finalizada_at' => 'datetime',
+            'dieciseisavos_finalizados' => 'boolean',
+            'dieciseisavos_finalizados_at' => 'datetime',
         ];
     }
 

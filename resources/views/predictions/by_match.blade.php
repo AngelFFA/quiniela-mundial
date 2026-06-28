@@ -32,6 +32,10 @@
                 </p>
             </div>
 
+            @if(auth()->user()->dieciseisavos_finalizados)
+                <a href="{{ route('round32.by_match') }}" class="inline-flex items-center justify-center rounded-2xl bg-[#1238ff] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-xl">Dieciseisavos</a>
+            @endif
+
             <a
                 href="{{ route('predictions.public') }}"
                 class="inline-flex items-center justify-center rounded-2xl bg-[#080f2f] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-xl transition hover:bg-[#1238ff]"

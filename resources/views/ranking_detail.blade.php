@@ -21,7 +21,7 @@
             </div>
         </div>
 
-        <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
             <div class="col-span-2 rounded-3xl bg-[#080f2f] p-5 text-white shadow-lg sm:col-span-1">
                 <p class="text-[10px] font-black uppercase tracking-[0.16em] text-white/50">Total</p>
                 <p class="mt-2 text-4xl font-black">{{ $totalPoints }}</p>
@@ -36,7 +36,11 @@
                 <p class="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#080f2f]/50">Llaves</p>
             </div>
             <div class="rounded-3xl bg-[#e9f8ef] p-5 text-center">
-                <p class="text-3xl font-black text-[#159447]">{{ $exactResults }}</p>
+                <p class="text-3xl font-black text-[#159447]">{{ $canSeeEliminations ? $eliminationPoints : '—' }}</p>
+                <p class="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#080f2f]/50">Eliminatorias</p>
+            </div>
+            <div class="rounded-3xl bg-slate-100 p-5 text-center">
+                <p class="text-3xl font-black text-[#080f2f]">{{ $exactResults }}</p>
                 <p class="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#080f2f]/50">Exactos</p>
             </div>
         </div>
@@ -140,6 +144,52 @@
                 </table>
             </div>
         </div>
+
+        @if($canSeeEliminations)
+            <div class="mt-10">
+                <p class="text-xs font-black uppercase tracking-[0.18em] text-[#159447]">Eliminatorias</p>
+                <h2 class="mt-1 text-2xl font-black text-[#080f2f]">Pronósticos de dieciseisavos</h2>
+            </div>
+
+            <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach($eliminationDetails as $row)
+                    @php
+                        $pointClass = match((int) $row->points) {
+                            5 => 'bg-[#159447] text-white',
+                            3 => 'bg-[#1238ff] text-white',
+                            2 => 'bg-[#ffc400] text-[#080f2f]',
+                            1 => 'bg-[#ff9f1c] text-white',
+                            default => 'bg-slate-200 text-slate-600',
+                        };
+                    @endphp
+                    <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-black text-[#080f2f]">{{ $row->home_team_name }} vs {{ $row->away_team_name }}</p>
+                                <p class="mt-1 text-xs font-bold text-[#080f2f]/45">Pronóstico: {{ $row->predicted_home_score }} - {{ $row->predicted_away_score }}</p>
+                                @if($row->predicted_home_score == $row->predicted_away_score)
+                                    <p class="mt-1 text-xs font-bold text-[#080f2f]/45">Clasifica: {{ $row->predicted_winner_name ?? '—' }}</p>
+                                @endif
+                            </div>
+                            <span class="inline-flex h-11 min-w-11 items-center justify-center rounded-full px-3 font-black {{ $pointClass }}">+{{ (int) $row->points }}</span>
+                        </div>
+                        <p class="mt-3 text-xs font-bold text-[#080f2f]/55">
+                            @if($row->is_finished)
+                                Resultado: {{ $row->home_score }} - {{ $row->away_score }}
+                                @if($row->home_score == $row->away_score && $row->official_winner_name)
+                                    · Clasificó {{ $row->official_winner_name }}
+                                @endif
+                            @else
+                                Pendiente de resultado oficial
+                            @endif
+                        </p>
+                        @if($row->reason)
+                            <p class="mt-1 text-xs font-black text-[#159447]">{{ $row->reason }}</p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        @endif
 
         <div class="mt-10">
             <p class="text-xs font-black uppercase tracking-[0.18em] text-[#9a6b00]">Dieciseisavos</p>

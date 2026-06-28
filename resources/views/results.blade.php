@@ -33,6 +33,9 @@
             </div>
         </div>
 
+        @if(session('success'))<div class="mt-6 rounded-2xl bg-green-50 px-5 py-4 font-bold text-green-800">{{ session('success') }}</div>@endif
+        @if(session('error'))<div class="mt-6 rounded-2xl bg-red-50 px-5 py-4 font-bold text-red-800">{{ session('error') }}</div>@endif
+
         <form method="POST" action="{{ route('results.store') }}" class="mt-8 sm:mt-10">
             @csrf
 
@@ -61,7 +64,7 @@
                             $textColor = in_array($groupColor, ['#ffc400', '#ff7a1a']) ? '#080f2f' : '#ffffff';
                         @endphp
 
-                        <details class="overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-black/5" {{ $loop->first ? 'open' : '' }}>
+                        <details class="overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-black/5">
                             <summary
                                 class="flex cursor-pointer list-none items-center justify-between px-5 py-5 sm:px-6"
                                 style="background-color: {{ $groupColor }}; color: {{ $textColor }};">
@@ -141,8 +144,51 @@
                         </details>
                     @endforeach
                 </div>
+
+                <div class="mt-8">
+                    <h2 class="mb-5 text-2xl font-black text-[#080f2f]">Dieciseisavos</h2>
+                    <div class="grid gap-4 lg:grid-cols-2">
+                        @foreach($round32Slots as $slot)
+                            @php $match = $slot->match; @endphp
+                            <div class="rounded-3xl bg-[#f4f6ff] p-4 sm:p-5 {{ $match ? '' : 'opacity-65' }}">
+                                @if($match)
+                                    <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                                        <div class="text-center">
+                                            <img src="https://flagcdn.com/w80/{{ strtolower($match->homeTeam->flag) }}.png" class="mx-auto h-8 w-11 rounded object-cover" alt="">
+                                            <p class="mt-2 text-sm font-black text-[#080f2f]">{{ $match->homeTeam->name }}</p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" min="0" name="results[{{ $match->id }}][home]" value="{{ old("results.{$match->id}.home", $match->home_score) }}" class="r32-result h-12 w-12 rounded-xl bg-white text-center text-lg font-black" data-match="{{ $match->id }}">
+                                            <span class="font-black text-[#080f2f]/40">-</span>
+                                            <input type="number" min="0" name="results[{{ $match->id }}][away]" value="{{ old("results.{$match->id}.away", $match->away_score) }}" class="r32-result h-12 w-12 rounded-xl bg-white text-center text-lg font-black" data-match="{{ $match->id }}">
+                                        </div>
+                                        <div class="text-center">
+                                            <img src="https://flagcdn.com/w80/{{ strtolower($match->awayTeam->flag) }}.png" class="mx-auto h-8 w-11 rounded object-cover" alt="">
+                                            <p class="mt-2 text-sm font-black text-[#080f2f]">{{ $match->awayTeam->name }}</p>
+                                        </div>
+                                    </div>
+                                    <div id="r32-winner-{{ $match->id }}" class="mt-3 hidden">
+                                        <select name="results[{{ $match->id }}][winner]" class="w-full rounded-xl bg-white px-3 py-3 font-bold">
+                                            <option value="">¿Quién clasificó?</option>
+                                            <option value="{{ $match->home_team_id }}" @selected((int) old("results.{$match->id}.winner", $match->winner_team_id) === (int) $match->home_team_id)>{{ $match->homeTeam->name }}</option>
+                                            <option value="{{ $match->away_team_id }}" @selected((int) old("results.{$match->id}.winner", $match->winner_team_id) === (int) $match->away_team_id)>{{ $match->awayTeam->name }}</option>
+                                        </select>
+                                    </div>
+                                @else
+                                    <div class="py-8 text-center text-sm font-black text-[#080f2f]/45">Partido pendiente</div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </form>
     </div>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const update=id=>{const a=[...document.querySelectorAll(`.r32-result[data-match="${id}"]`)];const w=document.getElementById(`r32-winner-${id}`);if(!w||a.length!==2)return;const both=a.every(x=>x.value!=='');w.classList.toggle('hidden',!(both&&Number(a[0].value)===Number(a[1].value)));};
+ document.querySelectorAll('.r32-result').forEach(x=>{update(x.dataset.match);x.addEventListener('input',()=>update(x.dataset.match));});
+});
+</script>
 @endsection

@@ -486,12 +486,12 @@
 
         @if($quinielaFinalizada)
             <div class="mt-6 rounded-3xl border border-[#159447]/20 bg-[#159447]/10 px-5 py-4 text-sm font-bold text-[#0c6f32]">
-                Su quiniela ya fue finalizada. A partir de este momento no puede realizar modificaciones.
+                Fase de grupos finalizada. Los dieciseisavos se completan en su apartado correspondiente.
             </div>
         @endif
 
         <div class="mt-8 rounded-[2rem] bg-white p-4 shadow-xl ring-1 ring-black/5">
-            <div class="grid gap-3 md:grid-cols-4">
+            <div class="grid gap-3 md:grid-cols-5">
                 <button type="button" class="main-tab-btn active rounded-2xl px-4 py-3 text-sm" data-main-tab="groups">
                     Pronósticos
                 </button>
@@ -507,6 +507,10 @@
                 <button type="button" class="main-tab-btn rounded-2xl px-4 py-3 text-sm" data-main-tab="bracket">
                     Llave
                 </button>
+
+                <a href="{{ route('round32.index') }}" class="main-tab-btn rounded-2xl px-4 py-3 text-center text-sm">
+                    Dieciseisavos
+                </a>
             </div>
         </div>
 

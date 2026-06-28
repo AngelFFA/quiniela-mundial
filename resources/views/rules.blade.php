@@ -101,9 +101,7 @@
                 </div>
 
                 <p class="text-sm font-medium leading-7 text-[#080f2f]/65">
-                    Antes de cada ronda, cada participante actualiza sus pronósticos:
-                    marcador al 90' y equipo que avanza. Los pronósticos se cierran antes del
-                    primer partido de cada ronda.
+                    La llave acertada suma 2 puntos. Los partidos de dieciseisavos mantienen un máximo de 5 puntos.
                 </p>
 
                 <div class="mt-7 space-y-4">
@@ -111,77 +109,38 @@
                         <div class="flex items-center justify-between gap-4">
                             <div>
                                 <p class="text-lg font-black text-[#080f2f]">Acertar la llave</p>
-                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
-                                    Acertaste los dos equipos que se enfrentan.
-                                </p>
+                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">Acertaste los dos equipos que se enfrentan.</p>
                             </div>
-
                             <p class="text-4xl font-black text-[#159447]">2</p>
                         </div>
                     </div>
 
-                    <div class="rounded-2xl bg-[#fff4f4] p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-lg font-black text-[#080f2f]">Marcador exacto y avanza correcto</p>
-                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
-                                    Predicción perfecta en eliminatoria.
-                                </p>
+                    <div class="rounded-2xl bg-[#f3f6ff] p-5">
+                        <p class="text-lg font-black text-[#080f2f]">Si hay ganador</p>
+                        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                            <div class="rounded-xl bg-white p-4 text-center">
+                                <p class="text-3xl font-black text-[#159447]">5</p>
+                                <p class="mt-1 text-sm font-bold text-[#080f2f]">Marcador exacto</p>
                             </div>
-
-                            <p class="text-4xl font-black text-[#159447]">5</p>
+                            <div class="rounded-xl bg-white p-4 text-center">
+                                <p class="text-3xl font-black text-[#1238ff]">3</p>
+                                <p class="mt-1 text-sm font-bold text-[#080f2f]">Ganador correcto</p>
+                            </div>
+                            <div class="rounded-xl bg-white p-4 text-center">
+                                <p class="text-3xl font-black text-[#e51b2b]">0</p>
+                                <p class="mt-1 text-sm font-bold text-[#080f2f]">Resultado incorrecto</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="rounded-2xl bg-[#fff4f4] p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-lg font-black text-[#080f2f]">Resultado y avanza correcto</p>
-                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
-                                    Acertaste resultado al 90' y quién avanza.
-                                </p>
-                            </div>
-
-                            <p class="text-4xl font-black text-[#1238ff]">3</p>
-                        </div>
-                    </div>
-
-                    <div class="rounded-2xl bg-[#fff4f4] p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-lg font-black text-[#080f2f]">Solo avanza correcto</p>
-                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
-                                    Fallaste marcador, pero acertaste clasificado.
-                                </p>
-                            </div>
-
-                            <p class="text-4xl font-black text-[#ff9f1c]">2</p>
-                        </div>
-                    </div>
-
-                    <div class="rounded-2xl bg-[#fff4f4] p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-lg font-black text-[#080f2f]">Exacto, pero avanza mal</p>
-                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
-                                    Acertaste marcador al 90', pero fallaste quién avanza.
-                                </p>
-                            </div>
-
-                            <p class="text-4xl font-black text-[#ff9f1c]">1</p>
-                        </div>
-                    </div>
-
-                    <div class="rounded-2xl bg-[#fff4f4] p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-lg font-black text-[#080f2f]">Todo mal</p>
-                                <p class="mt-1 text-sm font-medium text-[#080f2f]/55">
-                                    No acertaste marcador ni clasificado.
-                                </p>
-                            </div>
-
-                            <p class="text-4xl font-black text-[#e51b2b]">0</p>
+                    <div class="rounded-2xl bg-[#f3f6ff] p-5">
+                        <p class="text-lg font-black text-[#080f2f]">Si hay empate</p>
+                        <div class="mt-4 space-y-3 text-sm font-bold text-[#080f2f]">
+                            <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3"><span>Empate exacto y clasificado correcto</span><strong class="text-xl text-[#159447]">5</strong></div>
+                            <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3"><span>Empate no exacto y clasificado correcto</span><strong class="text-xl text-[#1238ff]">3</strong></div>
+                            <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3"><span>Empate exacto y clasificado incorrecto</span><strong class="text-xl text-[#ff9f1c]">2</strong></div>
+                            <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3"><span>Empate no exacto y clasificado incorrecto</span><strong class="text-xl text-[#ff9f1c]">1</strong></div>
+                            <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3"><span>No acertó el empate</span><strong class="text-xl text-[#e51b2b]">0</strong></div>
                         </div>
                     </div>
                 </div>

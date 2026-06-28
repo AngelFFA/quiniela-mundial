@@ -12,6 +12,7 @@ class MatchGame extends Model
         'match_date',
         'stage',
         'group_name',
+        'bracket_slot',
         'home_score',
         'away_score',
         'winner_team_id',
