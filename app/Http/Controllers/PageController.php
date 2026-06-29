@@ -43,7 +43,8 @@ class PageController extends Controller
                 DB::raw("COUNT(DISTINCT CASE WHEN match_games.stage = 'Grupos' THEN predictions.id END) as predictions_count"),
                 DB::raw("COALESCE(SUM(CASE WHEN match_games.stage = 'Grupos' THEN prediction_scores.points ELSE 0 END), 0) as group_points"),
                 DB::raw("COALESCE(SUM(CASE WHEN match_games.stage = 'Dieciseisavos' THEN prediction_scores.points ELSE 0 END), 0) as elimination_points_real"),
-                DB::raw("SUM(CASE WHEN match_games.stage = 'Grupos' AND prediction_scores.reason = 'Marcador exacto' THEN 1 ELSE 0 END) as exact_results")
+                DB::raw("SUM(CASE WHEN match_games.stage = 'Grupos' AND match_games.is_finished = 1 AND predictions.predicted_home_score = match_games.home_score AND predictions.predicted_away_score = match_games.away_score THEN 1 ELSE 0 END) as group_exact_results"),
+                DB::raw("SUM(CASE WHEN match_games.stage = 'Dieciseisavos' AND match_games.is_finished = 1 AND predictions.predicted_home_score = match_games.home_score AND predictions.predicted_away_score = match_games.away_score THEN 1 ELSE 0 END) as elimination_exact_results_real")
             )
             ->groupBy(
                 'users.id',
@@ -74,6 +75,8 @@ class PageController extends Controller
                 $user->elimination_points = $user->can_view_eliminations
                     ? (int) $user->elimination_points_real
                     : 0;
+                $user->exact_results = (int) $user->group_exact_results
+                    + ($user->can_view_eliminations ? (int) $user->elimination_exact_results_real : 0);
                 $user->points = $user->group_points + $user->bracket_points + $user->elimination_points;
 
                 return $user;
@@ -182,7 +185,21 @@ class PageController extends Controller
         $bracketScore = $bracketScoring->scoreForUser((int) $user->id);
         $bracketPoints = (int) $bracketScore['points'];
         $totalPoints = $groupPoints + $bracketPoints + $eliminationPoints;
-        $exactResults = $details->where('reason', 'Marcador exacto')->count();
+        $groupExactResults = $details->filter(function ($detail) {
+            return (bool) $detail->is_finished
+                && (int) $detail->predicted_home_score === (int) $detail->home_score
+                && (int) $detail->predicted_away_score === (int) $detail->away_score;
+        })->count();
+
+        $eliminationExactResults = $canSeeEliminations
+            ? $eliminationDetails->filter(function ($detail) {
+                return (bool) $detail->is_finished
+                    && (int) $detail->predicted_home_score === (int) $detail->home_score
+                    && (int) $detail->predicted_away_score === (int) $detail->away_score;
+            })->count()
+            : 0;
+
+        $exactResults = $groupExactResults + $eliminationExactResults;
         $playedMatches = $details->where('is_finished', true)->count();
         $bracketDetails = $bracketScore['details'];
         $bracketAvailable = (bool) $bracketScore['available'];
