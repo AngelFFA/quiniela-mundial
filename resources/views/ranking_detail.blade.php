@@ -129,7 +129,8 @@
                             @endphp
                             <tr class="border-b border-slate-100 hover:bg-[#f8f9ff]">
                                 <td class="px-5 py-4">
-                                    <p class="text-sm font-black text-[#080f2f]">{{ $row->home_team_name }} vs {{ $row->away_team_name }}</p>
+                                    <p class="text-[10px] font-black uppercase tracking-[0.12em] text-[#159447]">{{ $row->stage }}</p>
+                                <p class="mt-1 text-sm font-black text-[#080f2f]">{{ $row->home_team_name }} vs {{ $row->away_team_name }}</p>
                                     <p class="mt-1 text-xs font-bold text-[#080f2f]/40">{{ $row->match_date ? \Illuminate\Support\Carbon::parse($row->match_date)->format('d/m/Y') : 'Sin fecha' }} @if($row->group_name) · Grupo {{ $row->group_name }} @endif</p>
                                 </td>
                                 <td class="px-5 py-4 text-center font-black text-[#080f2f]">{{ $row->predicted_home_score }} - {{ $row->predicted_away_score }}</td>
@@ -148,7 +149,7 @@
         @if($canSeeEliminations)
             <div class="mt-10">
                 <p class="text-xs font-black uppercase tracking-[0.18em] text-[#159447]">Eliminatorias</p>
-                <h2 class="mt-1 text-2xl font-black text-[#080f2f]">Pronósticos de dieciseisavos</h2>
+                <h2 class="mt-1 text-2xl font-black text-[#080f2f]">Pronósticos de eliminatorias</h2>
             </div>
 
             <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -32,6 +32,8 @@ class User extends Authenticatable
             'quiniela_finalizada_at' => 'datetime',
             'dieciseisavos_finalizados' => 'boolean',
             'dieciseisavos_finalizados_at' => 'datetime',
+            'octavos_finalizados' => 'boolean',
+            'octavos_finalizados_at' => 'datetime',
         ];
     }
 

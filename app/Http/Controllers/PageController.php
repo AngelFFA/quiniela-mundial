@@ -28,6 +28,7 @@ class PageController extends Controller
     {
         $currentUser = Auth::user();
         $viewerFinishedRound32 = (bool) ($currentUser?->dieciseisavos_finalizados ?? false);
+        $viewerFinishedRound16 = (bool) ($currentUser?->octavos_finalizados ?? false);
 
         $ranking = User::leftJoin('predictions', 'users.id', '=', 'predictions.user_id')
             ->leftJoin('match_games', 'predictions.match_game_id', '=', 'match_games.id')
@@ -40,11 +41,15 @@ class PageController extends Controller
                 'users.quiniela_finalizada_at',
                 'users.dieciseisavos_finalizados',
                 'users.dieciseisavos_finalizados_at',
+                'users.octavos_finalizados',
+                'users.octavos_finalizados_at',
                 DB::raw("COUNT(DISTINCT CASE WHEN match_games.stage = 'Grupos' THEN predictions.id END) as predictions_count"),
                 DB::raw("COALESCE(SUM(CASE WHEN match_games.stage = 'Grupos' THEN prediction_scores.points ELSE 0 END), 0) as group_points"),
-                DB::raw("COALESCE(SUM(CASE WHEN match_games.stage = 'Dieciseisavos' THEN prediction_scores.points ELSE 0 END), 0) as elimination_points_real"),
+                DB::raw("COALESCE(SUM(CASE WHEN match_games.stage = 'Dieciseisavos' THEN prediction_scores.points ELSE 0 END), 0) as round32_points_real"),
+                DB::raw("COALESCE(SUM(CASE WHEN match_games.stage = 'Octavos' THEN prediction_scores.points ELSE 0 END), 0) as round16_points_real"),
                 DB::raw("SUM(CASE WHEN match_games.stage = 'Grupos' AND match_games.is_finished = 1 AND predictions.predicted_home_score = match_games.home_score AND predictions.predicted_away_score = match_games.away_score THEN 1 ELSE 0 END) as group_exact_results"),
-                DB::raw("SUM(CASE WHEN match_games.stage = 'Dieciseisavos' AND match_games.is_finished = 1 AND predictions.predicted_home_score = match_games.home_score AND predictions.predicted_away_score = match_games.away_score THEN 1 ELSE 0 END) as elimination_exact_results_real")
+                DB::raw("SUM(CASE WHEN match_games.stage = 'Dieciseisavos' AND match_games.is_finished = 1 AND predictions.predicted_home_score = match_games.home_score AND predictions.predicted_away_score = match_games.away_score THEN 1 ELSE 0 END) as round32_exact_results_real"),
+                DB::raw("SUM(CASE WHEN match_games.stage = 'Octavos' AND match_games.is_finished = 1 AND predictions.predicted_home_score = match_games.home_score AND predictions.predicted_away_score = match_games.away_score THEN 1 ELSE 0 END) as round16_exact_results_real")
             )
             ->groupBy(
                 'users.id',
@@ -53,14 +58,16 @@ class PageController extends Controller
                 'users.quiniela_finalizada',
                 'users.quiniela_finalizada_at',
                 'users.dieciseisavos_finalizados',
-                'users.dieciseisavos_finalizados_at'
+                'users.dieciseisavos_finalizados_at',
+                'users.octavos_finalizados',
+                'users.octavos_finalizados_at'
             )
             ->get();
 
         $bracketScores = $bracketScoring->scoresForUsers($ranking->pluck('id'));
 
         $ranking = $ranking
-            ->map(function ($user) use ($bracketScores, $viewerFinishedRound32) {
+            ->map(function ($user) use ($bracketScores, $viewerFinishedRound32, $viewerFinishedRound16) {
                 $score = $bracketScores->get((int) $user->id, [
                     'points' => 0,
                     'hits' => 0,
@@ -71,12 +78,14 @@ class PageController extends Controller
                 $user->bracket_points = (int) $score['points'];
                 $user->bracket_hits = (int) $score['hits'];
                 $user->bracket_available = (bool) $score['available'];
-                $user->can_view_eliminations = $viewerFinishedRound32 && (bool) $user->dieciseisavos_finalizados;
-                $user->elimination_points = $user->can_view_eliminations
-                    ? (int) $user->elimination_points_real
-                    : 0;
+                $user->can_view_round32 = $viewerFinishedRound32 && (bool) $user->dieciseisavos_finalizados;
+                $user->can_view_round16 = $viewerFinishedRound16 && (bool) $user->octavos_finalizados;
+                $user->can_view_eliminations = $user->can_view_round32 || $user->can_view_round16;
+                $user->elimination_points = ($user->can_view_round32 ? (int) $user->round32_points_real : 0)
+                    + ($user->can_view_round16 ? (int) $user->round16_points_real : 0);
                 $user->exact_results = (int) $user->group_exact_results
-                    + ($user->can_view_eliminations ? (int) $user->elimination_exact_results_real : 0);
+                    + ($user->can_view_round32 ? (int) $user->round32_exact_results_real : 0)
+                    + ($user->can_view_round16 ? (int) $user->round16_exact_results_real : 0);
                 $user->points = $user->group_points + $user->bracket_points + $user->elimination_points;
 
                 return $user;
@@ -96,7 +105,7 @@ class PageController extends Controller
             })
             ->values();
 
-        return view('ranking', compact('ranking', 'viewerFinishedRound32'));
+        return view('ranking', compact('ranking', 'viewerFinishedRound32', 'viewerFinishedRound16'));
     }
 
     public function rankingDetail(User $user, BracketScoringService $bracketScoring)
@@ -145,8 +154,15 @@ class PageController extends Controller
             ->orderBy('match_games.group_name')
             ->get();
 
-        $canSeeEliminations = (bool) $currentUser->dieciseisavos_finalizados
+        $canSeeRound32 = (bool) $currentUser->dieciseisavos_finalizados
             && (bool) $user->dieciseisavos_finalizados;
+        $canSeeRound16 = (bool) $currentUser->octavos_finalizados
+            && (bool) $user->octavos_finalizados;
+        $visibleEliminationStages = collect([
+            $canSeeRound32 ? 'Dieciseisavos' : null,
+            $canSeeRound16 ? 'Octavos' : null,
+        ])->filter()->values();
+        $canSeeEliminations = $visibleEliminationStages->isNotEmpty();
 
         $eliminationDetails = collect();
         if ($canSeeEliminations) {
@@ -158,10 +174,11 @@ class PageController extends Controller
                 ->leftJoin('teams as official_winner', 'match_games.winner_team_id', '=', 'official_winner.id')
                 ->leftJoin('prediction_scores', 'predictions.id', '=', 'prediction_scores.prediction_id')
                 ->where('predictions.user_id', $user->id)
-                ->where('match_games.stage', 'Dieciseisavos')
+                ->whereIn('match_games.stage', $visibleEliminationStages)
                 ->select(
                     'match_games.id as match_id',
                     'match_games.match_date',
+                    'match_games.stage',
                     'match_games.home_score',
                     'match_games.away_score',
                     'match_games.is_finished',
@@ -216,6 +233,8 @@ class PageController extends Controller
             'bracketDetails',
             'bracketAvailable',
             'canSeeEliminations',
+            'canSeeRound32',
+            'canSeeRound16',
             'eliminationDetails'
         ));
     }

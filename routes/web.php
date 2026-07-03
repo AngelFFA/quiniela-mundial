@@ -6,6 +6,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PredictionController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\RoundOf32Controller;
+use App\Http\Controllers\RoundOf16Controller;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'landing'])->name('landing');
@@ -33,6 +34,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/dieciseisavos/guardar', [RoundOf32Controller::class, 'store'])->name('round32.store');
     Route::post('/dieciseisavos/finalizar', [RoundOf32Controller::class, 'finalize'])->name('round32.finalize');
     Route::get('/quinielas/dieciseisavos', [RoundOf32Controller::class, 'byMatch'])->name('round32.by_match');
+
+    Route::get('/octavos', [RoundOf16Controller::class, 'index'])->name('round16.index');
+    Route::post('/octavos/guardar', [RoundOf16Controller::class, 'store'])->name('round16.store');
+    Route::post('/octavos/finalizar', [RoundOf16Controller::class, 'finalize'])->name('round16.finalize');
+    Route::get('/quinielas/octavos', [RoundOf16Controller::class, 'byMatch'])->name('round16.by_match');
 
     Route::get('/resultados', [ResultController::class, 'index'])->name('results.index');
     Route::post('/resultados/guardar', [ResultController::class, 'store'])->name('results.store');
