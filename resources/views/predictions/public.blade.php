@@ -259,8 +259,26 @@
                         href="{{ route('predictions.by_match') }}"
                         class="inline-flex items-center justify-center rounded-2xl bg-[#1238ff] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#080f2f]"
                     >
-                        Ver pronósticos por partido
+                        Fase de grupos de todos
                     </a>
+
+                    @if(auth()->user()->dieciseisavos_finalizados)
+                        <a
+                            href="{{ route('round32.by_match') }}"
+                            class="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-[#080f2f] shadow-xl ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:bg-[#edf1ff]"
+                        >
+                            Dieciseisavos de todos
+                        </a>
+                    @endif
+
+                    @if(auth()->user()->octavos_finalizados)
+                        <a
+                            href="{{ route('round16.by_match') }}"
+                            class="inline-flex items-center justify-center rounded-2xl bg-[#16a34a] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#080f2f]"
+                        >
+                            Octavos de todos
+                        </a>
+                    @endif
 
                     <a
                         href="{{ route('predictions.print') }}"

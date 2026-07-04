@@ -7,7 +7,7 @@ $flagUrl = function ($team) {
 };
 @endphp
 <section class="px-4 py-8 md:px-6"><div class="mx-auto max-w-6xl">
-<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between"><div><p class="text-xs font-black uppercase tracking-[.2em] text-[#1238ff]">Comparación general</p><h1 class="mt-2 text-3xl font-black text-[#080f2f] md:text-5xl">Dieciseisavos de todos</h1></div><div class="flex gap-2"><a href="{{ route('predictions.by_match') }}" class="rounded-xl bg-white px-4 py-3 text-sm font-black shadow ring-1 ring-black/5">Fase de grupos</a><a href="{{ route('round32.index') }}" class="rounded-xl bg-[#080f2f] px-4 py-3 text-sm font-black text-white">Volver</a></div></div>
+<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between"><div><p class="text-xs font-black uppercase tracking-[.2em] text-[#1238ff]">Comparación general</p><h1 class="mt-2 text-3xl font-black text-[#080f2f] md:text-5xl">Dieciseisavos de todos</h1></div><div class="flex flex-wrap gap-2"><a href="{{ route('predictions.by_match') }}" class="rounded-xl bg-white px-4 py-3 text-sm font-black shadow ring-1 ring-black/5">Fase de grupos</a>@if(auth()->user()->octavos_finalizados)<a href="{{ route('round16.by_match') }}" class="rounded-xl bg-[#16a34a] px-4 py-3 text-sm font-black text-white">Octavos</a>@endif<a href="{{ route('round32.index') }}" class="rounded-xl bg-[#080f2f] px-4 py-3 text-sm font-black text-white">Volver</a></div></div>
 <div class="mt-8 grid gap-6 md:grid-cols-2">
 @foreach($slots as $slot)
 @php $match=$slot->match; @endphp
