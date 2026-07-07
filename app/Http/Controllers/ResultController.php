@@ -7,11 +7,12 @@ use App\Models\Prediction;
 use App\Models\PredictionScore;
 use App\Services\RoundOf32Service;
 use App\Services\RoundOf16Service;
+use App\Services\RoundOf8Service;
 use Illuminate\Http\Request;
 
 class ResultController extends Controller
 {
-    public function index(RoundOf32Service $service, RoundOf16Service $round16Service)
+    public function index(RoundOf32Service $service, RoundOf16Service $round16Service, RoundOf8Service $round8Service)
     {
         $matches = MatchGame::with(['homeTeam', 'awayTeam'])
             ->where('stage', 'Grupos')
@@ -22,8 +23,9 @@ class ResultController extends Controller
 
         $round32Slots = $service->slots();
         $round16Slots = $round16Service->slots();
+        $round8Slots = $round8Service->slots();
 
-        return view('results', compact('matches', 'round32Slots', 'round16Slots'));
+        return view('results', compact('matches', 'round32Slots', 'round16Slots', 'round8Slots'));
     }
 
     public function store(Request $request)
@@ -44,7 +46,7 @@ class ResultController extends Controller
                 $winnerId = $match->home_team_id;
             } elseif ($away > $home) {
                 $winnerId = $match->away_team_id;
-            } elseif (in_array($match->stage, ['Dieciseisavos', 'Octavos'], true)) {
+            } elseif (in_array($match->stage, ['Dieciseisavos', 'Octavos', 'Cuartos'], true)) {
                 $winnerId = (int) ($result['winner'] ?? 0);
                 if (!in_array($winnerId, [$match->home_team_id, $match->away_team_id], true)) {
                     return back()->withInput()->with('error', 'Debe seleccionar quién clasificó en cada partido empatado de eliminatorias.');
@@ -76,7 +78,7 @@ class ResultController extends Controller
             $points = 0;
             $reason = 'Fallo';
 
-            if (in_array($match->stage, ['Dieciseisavos', 'Octavos'], true) && $realHome === $realAway) {
+            if (in_array($match->stage, ['Dieciseisavos', 'Octavos', 'Cuartos'], true) && $realHome === $realAway) {
                 $predictedDraw = $predHome === $predAway;
                 $exact = $predHome === $realHome && $predAway === $realAway;
                 $correctQualifier = (int) $prediction->predicted_winner_team_id === (int) $match->winner_team_id;

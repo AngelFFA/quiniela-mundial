@@ -491,7 +491,7 @@
         @endif
 
         <div class="mt-8 rounded-[2rem] bg-white p-4 shadow-xl ring-1 ring-black/5">
-            <div class="grid gap-3 md:grid-cols-6">
+            <div class="grid gap-3 md:grid-cols-7">
                 <button type="button" class="main-tab-btn active rounded-2xl px-4 py-3 text-sm" data-main-tab="groups">
                     Pronósticos
                 </button>
@@ -514,6 +514,10 @@
 
                 <a href="{{ route('round16.index') }}" class="main-tab-btn rounded-2xl px-4 py-3 text-center text-sm">
                     Octavos
+                </a>
+
+                <a href="{{ route('round8.index') }}" class="main-tab-btn rounded-2xl px-4 py-3 text-center text-sm">
+                    Cuartos
                 </a>
             </div>
         </div>

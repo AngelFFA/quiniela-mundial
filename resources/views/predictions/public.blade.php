@@ -254,39 +254,34 @@
                     Revisá la quiniela completa de cada participante en modo solo lectura.
                 </p>
 
-                <div class="mt-6 flex flex-wrap gap-3">
-                    <a
-                        href="{{ route('predictions.by_match') }}"
-                        class="inline-flex items-center justify-center rounded-2xl bg-[#1238ff] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#080f2f]"
-                    >
-                        Fase de grupos de todos
-                    </a>
-
-                    @if(auth()->user()->dieciseisavos_finalizados)
-                        <a
-                            href="{{ route('round32.by_match') }}"
-                            class="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-[#080f2f] shadow-xl ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:bg-[#edf1ff]"
-                        >
-                            Dieciseisavos de todos
+                <div class="mt-6 rounded-[1.5rem] bg-white p-2 shadow-xl ring-1 ring-black/5">
+                    <div class="grid gap-2 md:grid-cols-5">
+                        <a href="{{ route('predictions.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">
+                            Grupos
                         </a>
-                    @endif
 
-                    @if(auth()->user()->octavos_finalizados)
-                        <a
-                            href="{{ route('round16.by_match') }}"
-                            class="inline-flex items-center justify-center rounded-2xl bg-[#16a34a] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#080f2f]"
-                        >
-                            Octavos de todos
+                        @if(auth()->user()->dieciseisavos_finalizados)
+                            <a href="{{ route('round32.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">
+                                Dieciseisavos
+                            </a>
+                        @endif
+
+                        @if(auth()->user()->octavos_finalizados)
+                            <a href="{{ route('round16.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">
+                                Octavos
+                            </a>
+                        @endif
+
+                        @if(auth()->user()->cuartos_finalizados)
+                            <a href="{{ route('round8.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">
+                                Cuartos
+                            </a>
+                        @endif
+
+                        <a href="{{ route('predictions.print') }}" target="_blank" class="rounded-2xl bg-[#080f2f] px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-[#1238ff]">
+                            Imprimir
                         </a>
-                    @endif
-
-                    <a
-                        href="{{ route('predictions.print') }}"
-                        target="_blank"
-                        class="inline-flex items-center justify-center rounded-2xl bg-[#080f2f] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#1238ff]"
-                    >
-                        Imprimir quinielas finalizadas
-                    </a>
+                    </div>
                 </div>
             </div>
 
@@ -648,6 +643,32 @@
                 <div class="mt-5 grid gap-4 md:grid-cols-2">
                     @foreach($round16Slots as $slot)
                         @php $match=$slot->match; $prediction=$match ? $round16Predictions->get($match->id) : null; @endphp
+                        @if($match)
+                            <div class="rounded-2xl bg-[#f4f6ff] p-4">
+                                <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
+                                    <div class="text-sm font-black text-[#080f2f]">{{ $match->homeTeam->name }}</div>
+                                    <div class="rounded-xl bg-white px-3 py-2 font-black text-[#080f2f]">{{ $prediction ? $prediction->predicted_home_score.' - '.$prediction->predicted_away_score : '-' }}</div>
+                                    <div class="text-sm font-black text-[#080f2f]">{{ $match->awayTeam->name }}</div>
+                                </div>
+                                @if($prediction && $prediction->predicted_home_score === $prediction->predicted_away_score && $prediction->predictedWinner)
+                                    <p class="mt-2 text-center text-xs font-bold text-[#080f2f]/55">Clasifica: {{ $prediction->predictedWinner->name }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if($canSeeRound8 ?? false)
+            <div class="mt-10 rounded-[2rem] bg-white p-5 shadow-xl ring-1 ring-black/5">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h2 class="text-2xl font-black text-[#080f2f]">Cuartos</h2>
+                    <a href="{{ route('round8.by_match') }}" class="rounded-xl bg-[#1238ff] px-4 py-3 text-center text-sm font-black text-white">Ver los de todos</a>
+                </div>
+                <div class="mt-5 grid gap-4 md:grid-cols-2">
+                    @foreach($round8Slots as $slot)
+                        @php $match=$slot->match; $prediction=$match ? $round8Predictions->get($match->id) : null; @endphp
                         @if($match)
                             <div class="rounded-2xl bg-[#f4f6ff] p-4">
                                 <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">

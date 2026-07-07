@@ -34,6 +34,8 @@ class User extends Authenticatable
             'dieciseisavos_finalizados_at' => 'datetime',
             'octavos_finalizados' => 'boolean',
             'octavos_finalizados_at' => 'datetime',
+            'cuartos_finalizados' => 'boolean',
+            'cuartos_finalizados_at' => 'datetime',
         ];
     }
 

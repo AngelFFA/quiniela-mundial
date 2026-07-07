@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Octavos de todos - Mundial 2026'])
+@extends('layouts.app', ['title' => 'Cuartos de todos - Mundial 2026'])
 @section('content')
 @php
 $flagUrl = function ($team) {
@@ -7,7 +7,7 @@ $flagUrl = function ($team) {
 };
 @endphp
 <section class="px-4 py-8 md:px-6"><div class="mx-auto max-w-6xl">
-<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between"><div><p class="text-xs font-black uppercase tracking-[.2em] text-[#1238ff]">Comparación general</p><h1 class="mt-2 text-3xl font-black text-[#080f2f] md:text-5xl">Octavos de todos</h1></div></div>
+<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between"><div><p class="text-xs font-black uppercase tracking-[.2em] text-[#1238ff]">Comparación general</p><h1 class="mt-2 text-3xl font-black text-[#080f2f] md:text-5xl">Cuartos de todos</h1></div></div>
 <div class="mt-6 rounded-[1.5rem] bg-white p-2 shadow-xl ring-1 ring-black/5">
     <div class="grid gap-2 md:grid-cols-5">
         <a href="{{ route('predictions.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">Grupos</a>
