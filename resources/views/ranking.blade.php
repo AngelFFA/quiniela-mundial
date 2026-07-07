@@ -76,7 +76,7 @@
                                     @endif
                                 </div>
                                 <p class="mt-1 text-xs font-bold text-[#080f2f]/45">
-                                    {{ $user->exact_results }} exactos · {{ $user->predictions_count }} pronósticos
+                                    {{ $user->visible_predictions_count }} / 104 partidos
                                 </p>
                             </div>
 
@@ -150,7 +150,7 @@
                                         @endif
                                         <div>
                                             <p class="font-black text-[#080f2f]">{{ $user->name }}</p>
-                                            <p class="mt-1 text-xs font-bold text-[#080f2f]/40">{{ $user->predictions_count }} pronósticos</p>
+                                            <p class="mt-1 text-xs font-bold text-[#080f2f]/40">{{ $user->visible_predictions_count }} / 104 partidos</p>
                                         </div>
                                     @if($puedeVerDetalle)</a>@else</div>@endif
                                 </td>
