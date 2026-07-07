@@ -47,6 +47,9 @@ class PageController extends Controller
                 'users.cuartos_finalizados',
                 'users.cuartos_finalizados_at',
                 DB::raw("COUNT(DISTINCT CASE WHEN match_games.stage = 'Grupos' THEN predictions.id END) as predictions_count"),
+                DB::raw("COUNT(DISTINCT CASE WHEN match_games.stage = 'Dieciseisavos' THEN predictions.id END) as round32_predictions_count_real"),
+                DB::raw("COUNT(DISTINCT CASE WHEN match_games.stage = 'Octavos' THEN predictions.id END) as round16_predictions_count_real"),
+                DB::raw("COUNT(DISTINCT CASE WHEN match_games.stage = 'Cuartos' THEN predictions.id END) as round8_predictions_count_real"),
                 DB::raw("COALESCE(SUM(CASE WHEN match_games.stage = 'Grupos' THEN prediction_scores.points ELSE 0 END), 0) as group_points"),
                 DB::raw("COALESCE(SUM(CASE WHEN match_games.stage = 'Dieciseisavos' THEN prediction_scores.points ELSE 0 END), 0) as round32_points_real"),
                 DB::raw("COALESCE(SUM(CASE WHEN match_games.stage = 'Octavos' THEN prediction_scores.points ELSE 0 END), 0) as round16_points_real"),
@@ -89,6 +92,10 @@ class PageController extends Controller
                 $user->can_view_round16 = $viewerFinishedRound16 && (bool) $user->octavos_finalizados;
                 $user->can_view_round8 = $viewerFinishedRound8 && (bool) $user->cuartos_finalizados;
                 $user->can_view_eliminations = $user->can_view_round32 || $user->can_view_round16 || $user->can_view_round8;
+                $user->visible_predictions_count = (int) $user->predictions_count
+                    + ($user->can_view_round32 ? (int) $user->round32_predictions_count_real : 0)
+                    + ($user->can_view_round16 ? (int) $user->round16_predictions_count_real : 0)
+                    + ($user->can_view_round8 ? (int) $user->round8_predictions_count_real : 0);
                 $user->elimination_points = ($user->can_view_round32 ? (int) $user->round32_points_real : 0)
                     + ($user->can_view_round16 ? (int) $user->round16_points_real : 0)
                     + ($user->can_view_round8 ? (int) $user->round8_points_real : 0);
