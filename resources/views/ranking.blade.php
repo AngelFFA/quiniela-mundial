@@ -86,7 +86,7 @@
                             </div>
                         </div>
 
-                        <div class="mt-4 grid grid-cols-3 gap-2">
+                        <div class="mt-4 grid grid-cols-2 gap-2">
                             <div class="rounded-2xl bg-[#edf1ff] px-3 py-3 text-center">
                                 <p class="text-lg font-black text-[#1238ff]">{{ $user->group_points }}</p>
                                 <p class="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#080f2f]/50">Fase de grupos</p>
@@ -104,6 +104,10 @@
                                     <p class="text-lg font-black text-[#080f2f]/35">—</p>
                                 @endif
                                 <p class="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#080f2f]/50">Eliminatorias</p>
+                            </div>
+                            <div class="rounded-2xl bg-[#f1f5f9] px-3 py-3 text-center">
+                                <p class="text-lg font-black text-[#080f2f]">{{ $user->exact_results }}</p>
+                                <p class="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#080f2f]/50">Exactos</p>
                             </div>
                         </div>
                     @if($puedeVerDetalle)
