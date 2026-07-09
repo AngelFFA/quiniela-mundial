@@ -75,9 +75,12 @@
                                         <span class="rounded-full bg-[#159447]/10 px-2 py-1 text-[9px] font-black uppercase text-[#159447]">Tú</span>
                                     @endif
                                 </div>
-                                <p class="mt-1 text-xs font-bold text-[#080f2f]/45">
-                                    {{ $user->visible_predictions_count }} / 104 partidos
-                                </p>
+                                <div class="mt-1 flex flex-wrap items-center gap-2">
+                                    <p class="text-xs font-bold text-[#080f2f]/45">{{ $user->visible_predictions_count }} / 104 partidos</p>
+                                    <span class="rounded-full bg-[#e9f8ef] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#159447]">
+                                        {{ $user->exact_results }} exactos
+                                    </span>
+                                </div>
                             </div>
 
                             <div class="text-right">
@@ -86,7 +89,7 @@
                             </div>
                         </div>
 
-                        <div class="mt-4 grid grid-cols-2 gap-2">
+                        <div class="mt-4 grid grid-cols-3 gap-2">
                             <div class="rounded-2xl bg-[#edf1ff] px-3 py-3 text-center">
                                 <p class="text-lg font-black text-[#1238ff]">{{ $user->group_points }}</p>
                                 <p class="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#080f2f]/50">Fase de grupos</p>
@@ -104,10 +107,6 @@
                                     <p class="text-lg font-black text-[#080f2f]/35">—</p>
                                 @endif
                                 <p class="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#080f2f]/50">Eliminatorias</p>
-                            </div>
-                            <div class="rounded-2xl bg-[#f1f5f9] px-3 py-3 text-center">
-                                <p class="text-lg font-black text-[#080f2f]">{{ $user->exact_results }}</p>
-                                <p class="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#080f2f]/50">Exactos</p>
                             </div>
                         </div>
                     @if($puedeVerDetalle)
