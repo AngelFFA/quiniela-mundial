@@ -11,6 +11,7 @@ use App\Services\BracketSimulatorService;
 use App\Services\RoundOf32Service;
 use App\Services\RoundOf16Service;
 use App\Services\RoundOf8Service;
+use App\Services\RoundOf4Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -190,7 +191,7 @@ class PredictionController extends Controller
             ->with('success', 'Su quiniela fue finalizada correctamente. A partir de este momento ya no podrá realizar modificaciones.');
     }
 
-    public function publicList(Request $request, RoundOf32Service $round32Service, RoundOf16Service $round16Service, RoundOf8Service $round8Service)
+    public function publicList(Request $request, RoundOf32Service $round32Service, RoundOf16Service $round16Service, RoundOf8Service $round8Service, RoundOf4Service $round4Service)
     {
         $currentUser = Auth::user();
 
@@ -298,6 +299,20 @@ class PredictionController extends Controller
                 ->keyBy('match_game_id');
         }
 
+        $canSeeRound4 = (bool) $currentUser->semifinales_finalizados
+            && (bool) $selectedUser->semifinales_finalizados;
+        $round4Slots = collect();
+        $round4Predictions = collect();
+
+        if ($canSeeRound4) {
+            $round4Slots = $round4Service->slots();
+            $round4Predictions = Prediction::with('predictedWinner')
+                ->where('user_id', $selectedUser->id)
+                ->whereIn('match_game_id', $round4Slots->pluck('match.id')->filter())
+                ->get()
+                ->keyBy('match_game_id');
+        }
+
         return view('predictions.public', compact(
             'users',
             'selectedUser',
@@ -314,7 +329,10 @@ class PredictionController extends Controller
             'round16Predictions',
             'canSeeRound8',
             'round8Slots',
-            'round8Predictions'
+            'round8Predictions',
+            'canSeeRound4',
+            'round4Slots',
+            'round4Predictions'
         ));
     }
 

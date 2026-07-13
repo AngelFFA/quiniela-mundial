@@ -36,6 +36,8 @@ class User extends Authenticatable
             'octavos_finalizados_at' => 'datetime',
             'cuartos_finalizados' => 'boolean',
             'cuartos_finalizados_at' => 'datetime',
+            'semifinales_finalizados' => 'boolean',
+            'semifinales_finalizados_at' => 'datetime',
         ];
     }
 

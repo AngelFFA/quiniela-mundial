@@ -8,11 +8,12 @@ use App\Models\PredictionScore;
 use App\Services\RoundOf32Service;
 use App\Services\RoundOf16Service;
 use App\Services\RoundOf8Service;
+use App\Services\RoundOf4Service;
 use Illuminate\Http\Request;
 
 class ResultController extends Controller
 {
-    public function index(RoundOf32Service $service, RoundOf16Service $round16Service, RoundOf8Service $round8Service)
+    public function index(RoundOf32Service $service, RoundOf16Service $round16Service, RoundOf8Service $round8Service, RoundOf4Service $round4Service)
     {
         $matches = MatchGame::with(['homeTeam', 'awayTeam'])
             ->where('stage', 'Grupos')
@@ -24,8 +25,9 @@ class ResultController extends Controller
         $round32Slots = $service->slots();
         $round16Slots = $round16Service->slots();
         $round8Slots = $round8Service->slots();
+        $round4Slots = $round4Service->slots();
 
-        return view('results', compact('matches', 'round32Slots', 'round16Slots', 'round8Slots'));
+        return view('results', compact('matches', 'round32Slots', 'round16Slots', 'round8Slots', 'round4Slots'));
     }
 
     public function store(Request $request)
@@ -46,7 +48,7 @@ class ResultController extends Controller
                 $winnerId = $match->home_team_id;
             } elseif ($away > $home) {
                 $winnerId = $match->away_team_id;
-            } elseif (in_array($match->stage, ['Dieciseisavos', 'Octavos', 'Cuartos'], true)) {
+            } elseif (in_array($match->stage, ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinales'], true)) {
                 $winnerId = (int) ($result['winner'] ?? 0);
                 if (!in_array($winnerId, [$match->home_team_id, $match->away_team_id], true)) {
                     return back()->withInput()->with('error', 'Debe seleccionar quién clasificó en cada partido empatado de eliminatorias.');
@@ -78,7 +80,7 @@ class ResultController extends Controller
             $points = 0;
             $reason = 'Fallo';
 
-            if (in_array($match->stage, ['Dieciseisavos', 'Octavos', 'Cuartos'], true) && $realHome === $realAway) {
+            if (in_array($match->stage, ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semifinales'], true) && $realHome === $realAway) {
                 $predictedDraw = $predHome === $predAway;
                 $exact = $predHome === $realHome && $predAway === $realAway;
                 $correctQualifier = (int) $prediction->predicted_winner_team_id === (int) $match->winner_team_id;

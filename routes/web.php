@@ -8,6 +8,7 @@ use App\Http\Controllers\ResultController;
 use App\Http\Controllers\RoundOf32Controller;
 use App\Http\Controllers\RoundOf16Controller;
 use App\Http\Controllers\RoundOf8Controller;
+use App\Http\Controllers\RoundOf4Controller;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'landing'])->name('landing');
@@ -45,6 +46,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/cuartos/guardar', [RoundOf8Controller::class, 'store'])->name('round8.store');
     Route::post('/cuartos/finalizar', [RoundOf8Controller::class, 'finalize'])->name('round8.finalize');
     Route::get('/quinielas/cuartos', [RoundOf8Controller::class, 'byMatch'])->name('round8.by_match');
+
+    Route::get('/semifinales', [RoundOf4Controller::class, 'index'])->name('round4.index');
+    Route::post('/semifinales/guardar', [RoundOf4Controller::class, 'store'])->name('round4.store');
+    Route::post('/semifinales/finalizar', [RoundOf4Controller::class, 'finalize'])->name('round4.finalize');
+    Route::get('/quinielas/semifinales', [RoundOf4Controller::class, 'byMatch'])->name('round4.by_match');
 
     Route::get('/resultados', [ResultController::class, 'index'])->name('results.index');
     Route::post('/resultados/guardar', [ResultController::class, 'store'])->name('results.store');

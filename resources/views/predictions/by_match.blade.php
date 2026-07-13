@@ -33,7 +33,7 @@
             </div>
 
 <div class="mt-6 rounded-[1.5rem] bg-white p-2 shadow-xl ring-1 ring-black/5">
-                <div class="grid gap-2 md:grid-cols-5">
+                <div class="grid gap-2 md:grid-cols-6">
                     <a href="{{ route('predictions.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">Grupos</a>
                     @if(auth()->user()->dieciseisavos_finalizados)
                         <a href="{{ route('round32.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">Dieciseisavos</a>
@@ -43,6 +43,9 @@
                     @endif
                     @if(auth()->user()->cuartos_finalizados)
                         <a href="{{ route('round8.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">Cuartos</a>
+                    @endif
+                    @if(auth()->user()->semifinales_finalizados)
+                        <a href="{{ route('round4.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">Semifinales</a>
                     @endif
                     <a href="{{ route('predictions.public') }}" class="rounded-2xl bg-[#080f2f] px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-[#1238ff]">Quinielas</a>
                 </div>

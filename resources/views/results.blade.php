@@ -254,6 +254,43 @@
                         @endforeach
                     </div>
                 </div>
+
+                <div class="mt-8">
+                    <h2 class="mb-5 text-2xl font-black text-[#080f2f]">Semifinales</h2>
+                    <div class="grid gap-4 lg:grid-cols-2">
+                        @foreach($round4Slots as $slot)
+                            @php $match = $slot->match; @endphp
+                            <div class="rounded-3xl bg-[#f4f6ff] p-4 sm:p-5 {{ $match ? '' : 'opacity-65' }}">
+                                @if($match)
+                                    <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                                        <div class="text-center">
+                                            <img src="https://flagcdn.com/w80/{{ strtolower($match->homeTeam->flag) }}.png" class="mx-auto h-8 w-11 rounded object-cover" alt="">
+                                            <p class="mt-2 text-sm font-black text-[#080f2f]">{{ $match->homeTeam->name }}</p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" min="0" name="results[{{ $match->id }}][home]" value="{{ old("results.{$match->id}.home", $match->home_score) }}" class="knockout-result h-12 w-12 rounded-xl bg-white text-center text-lg font-black" data-match="{{ $match->id }}">
+                                            <span class="font-black text-[#080f2f]/40">-</span>
+                                            <input type="number" min="0" name="results[{{ $match->id }}][away]" value="{{ old("results.{$match->id}.away", $match->away_score) }}" class="knockout-result h-12 w-12 rounded-xl bg-white text-center text-lg font-black" data-match="{{ $match->id }}">
+                                        </div>
+                                        <div class="text-center">
+                                            <img src="https://flagcdn.com/w80/{{ strtolower($match->awayTeam->flag) }}.png" class="mx-auto h-8 w-11 rounded object-cover" alt="">
+                                            <p class="mt-2 text-sm font-black text-[#080f2f]">{{ $match->awayTeam->name }}</p>
+                                        </div>
+                                    </div>
+                                    <div id="ko-winner-{{ $match->id }}" class="mt-3 hidden">
+                                        <select name="results[{{ $match->id }}][winner]" class="w-full rounded-xl bg-white px-3 py-3 font-bold">
+                                            <option value="">¿Quién clasificó?</option>
+                                            <option value="{{ $match->home_team_id }}" @selected((int) old("results.{$match->id}.winner", $match->winner_team_id) === (int) $match->home_team_id)>{{ $match->homeTeam->name }}</option>
+                                            <option value="{{ $match->away_team_id }}" @selected((int) old("results.{$match->id}.winner", $match->winner_team_id) === (int) $match->away_team_id)>{{ $match->awayTeam->name }}</option>
+                                        </select>
+                                    </div>
+                                @else
+                                    <div class="py-8 text-center text-sm font-black text-[#080f2f]/45">Partido pendiente</div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </form>
     </div>

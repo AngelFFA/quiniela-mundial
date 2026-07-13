@@ -255,7 +255,7 @@
                 </p>
 
                 <div class="mt-6 rounded-[1.5rem] bg-white p-2 shadow-xl ring-1 ring-black/5">
-                    <div class="grid gap-2 md:grid-cols-5">
+                    <div class="grid gap-2 md:grid-cols-6">
                         <a href="{{ route('predictions.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">
                             Grupos
                         </a>
@@ -275,6 +275,12 @@
                         @if(auth()->user()->cuartos_finalizados)
                             <a href="{{ route('round8.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">
                                 Cuartos
+                            </a>
+                        @endif
+
+                        @if(auth()->user()->semifinales_finalizados)
+                            <a href="{{ route('round4.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">
+                                Semifinales
                             </a>
                         @endif
 
@@ -669,6 +675,32 @@
                 <div class="mt-5 grid gap-4 md:grid-cols-2">
                     @foreach($round8Slots as $slot)
                         @php $match=$slot->match; $prediction=$match ? $round8Predictions->get($match->id) : null; @endphp
+                        @if($match)
+                            <div class="rounded-2xl bg-[#f4f6ff] p-4">
+                                <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
+                                    <div class="text-sm font-black text-[#080f2f]">{{ $match->homeTeam->name }}</div>
+                                    <div class="rounded-xl bg-white px-3 py-2 font-black text-[#080f2f]">{{ $prediction ? $prediction->predicted_home_score.' - '.$prediction->predicted_away_score : '-' }}</div>
+                                    <div class="text-sm font-black text-[#080f2f]">{{ $match->awayTeam->name }}</div>
+                                </div>
+                                @if($prediction && $prediction->predicted_home_score === $prediction->predicted_away_score && $prediction->predictedWinner)
+                                    <p class="mt-2 text-center text-xs font-bold text-[#080f2f]/55">Clasifica: {{ $prediction->predictedWinner->name }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if($canSeeRound4 ?? false)
+            <div class="mt-10 rounded-[2rem] bg-white p-5 shadow-xl ring-1 ring-black/5">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h2 class="text-2xl font-black text-[#080f2f]">Semifinales</h2>
+                    <a href="{{ route('round4.by_match') }}" class="rounded-xl bg-[#1238ff] px-4 py-3 text-center text-sm font-black text-white">Ver los de todos</a>
+                </div>
+                <div class="mt-5 grid gap-4 md:grid-cols-2">
+                    @foreach($round4Slots as $slot)
+                        @php $match=$slot->match; $prediction=$match ? $round4Predictions->get($match->id) : null; @endphp
                         @if($match)
                             <div class="rounded-2xl bg-[#f4f6ff] p-4">
                                 <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">

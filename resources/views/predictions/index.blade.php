@@ -519,6 +519,10 @@
                 <a href="{{ route('round8.index') }}" class="main-tab-btn rounded-2xl px-4 py-3 text-center text-sm">
                     Cuartos
                 </a>
+
+                <a href="{{ route('round4.index') }}" class="main-tab-btn rounded-2xl px-4 py-3 text-center text-sm">
+                    Semifinales
+                </a>
             </div>
         </div>
 
