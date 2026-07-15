@@ -36,6 +36,22 @@
             </div>
         @endif
 
+
+        @if(($finalOficialTerminada ?? false) && ($ganadorQuiniela ?? null))
+            <div class="mt-6 overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#ffc400] via-[#ffe785] to-[#fff7d6] p-6 shadow-xl ring-1 ring-[#e2b500]/30">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-[0.22em] text-[#7a5200]">Ganador de la quiniela</p>
+                        <h2 class="mt-2 text-3xl font-black text-[#080f2f]">{{ $ganadorQuiniela->name }}</h2>
+                        <p class="mt-1 text-sm font-bold text-[#080f2f]/65">Primer lugar final con {{ $ganadorQuiniela->points }} puntos.</p>
+                    </div>
+                    <div class="rounded-full bg-white/70 px-6 py-4 text-center shadow-sm">
+                        <p class="text-4xl font-black text-[#080f2f]">🏆</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="mt-6 space-y-3 md:hidden">
             @forelse($ranking as $user)
                 @php

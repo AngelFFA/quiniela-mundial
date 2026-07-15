@@ -491,7 +491,7 @@
         @endif
 
         <div class="mt-8 rounded-[2rem] bg-white p-4 shadow-xl ring-1 ring-black/5">
-            <div class="grid gap-3 md:grid-cols-7">
+            <div class="grid gap-3 md:grid-cols-8">
                 <button type="button" class="main-tab-btn active rounded-2xl px-4 py-3 text-sm" data-main-tab="groups">
                     Pronósticos
                 </button>
@@ -522,6 +522,10 @@
 
                 <a href="{{ route('round4.index') }}" class="main-tab-btn rounded-2xl px-4 py-3 text-center text-sm">
                     Semifinales
+                </a>
+
+                <a href="{{ route('round2.index') }}" class="main-tab-btn rounded-2xl px-4 py-3 text-center text-sm">
+                    Final
                 </a>
             </div>
         </div>

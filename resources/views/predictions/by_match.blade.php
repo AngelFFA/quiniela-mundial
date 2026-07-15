@@ -47,6 +47,9 @@
                     @if(auth()->user()->semifinales_finalizados)
                         <a href="{{ route('round4.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">Semifinales</a>
                     @endif
+                    @if(auth()->user()->final_finalizada)
+                        <a href="{{ route('round2.by_match') }}" class="rounded-2xl px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-[#080f2f] ring-1 ring-[#dbe2f1] transition hover:bg-[#edf1ff]">Final</a>
+                    @endif
                     <a href="{{ route('predictions.public') }}" class="rounded-2xl bg-[#080f2f] px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-[#1238ff]">Quinielas</a>
                 </div>
             </div>
